@@ -107,7 +107,7 @@ Each run includes:
 
 ---
 
-# 3. Validation & Scenario Model
+# 3. Test Scenario Model
 
 ## What is Validated
 
@@ -149,7 +149,7 @@ flowchart TD
     A["Merchant's Owned Games"] --> B["Game Mode"]
     C["Merchant's merchant_settings"] --> D["API Endpoints"]
 
-    B --> E["Select Scenarios"]
+    B --> E["Determine Required Scenarios"]
 
     E --> G["Execute Scenarios"]
     D --> G
@@ -157,11 +157,18 @@ flowchart TD
 
 ### Rules
 
-- **Game mode determines scenarios**
+- **Game mode determines test scenarios**
 - **Merchant mode (merchant_settings) determines API endpoints**
 
+| Merchant Mode | Game Mode | API Target |
+|--------------|----------|------------|
+| Seamless | Seamless | Merchant APIs |
+| Seamless | Transfer | Merchant APIs |
+| Transfer | Seamless | APISYS APIs |
+| Transfer | Transfer | APISYS APIs |
+
 ---
-## Test Coverage
+## Test Scenario Coverage
 
 ### General (always executed)
 
@@ -172,9 +179,7 @@ flowchart TD
 
 ---
 
-### Game Wallet Mode: Seamless (Wallet Operation APIs)
-
-> Applies when a game is **Seamless mode**  
+### Game Mode: Seamless (Wallet Operation APIs)
 
 | Code | Feature |
 |------|--------|
@@ -187,26 +192,13 @@ flowchart TD
 
 ---
 
-### Game Wallet Mode: Transfer Wallet (Transfer APIs)
-
-> Applies when a game is **Transfer Wallet mode**  
+### Game Mode: Transfer Wallet (Transfer APIs)
 
 | Code | Feature |
 |------|--------|
 | AMO010 | transfer-in |
 | AMO011 | transfer-out |
 | AMO014 | cancel-transfer |
-
----
-
-## Summary
-
-| Merchant Mode | Game Mode | API Target |
-|--------------|----------|------------|
-| Seamless | Seamless | Merchant APIs |
-| Seamless | Transfer | Merchant APIs |
-| Transfer | Seamless | APISYS APIs |
-| Transfer | Transfer | APISYS APIs |
 
 ---
 
