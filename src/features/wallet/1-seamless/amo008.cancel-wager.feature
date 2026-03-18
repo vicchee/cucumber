@@ -17,7 +17,7 @@ Feature: AMO008 Seamless Cancel Wager
       | payment_amount   | 30                 |
     When APISYS cancels a wager with:
       | field          | value                |
-      | transaction_no | <transaction_uuid_1> |
+      | transaction_no | <transaction_no>     |
       | wager_no       | <wager_no>           |
     Then the AMO008 response should be successful
     And the response should contain:

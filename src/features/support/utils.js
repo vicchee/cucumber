@@ -37,10 +37,6 @@ function normalizeError(error) {
   };
 }
 
-function normalizePayload(payload = {}) {
-  return { ...payload };
-}
-
 function createUUIDVars(prefix, count = GENERATED_UUID_COUNT) {
   return Object.fromEntries(
     Array.from({ length: count }, (_, index) => [
@@ -84,14 +80,31 @@ function matchesExpected(actual, expected) {
   return actual === normalizeExpected(expected);
 }
 
+function parseJsonLike(value) {
+  const trimmed = value.trim();
+
+  if (
+    (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+    (trimmed.startsWith("{") && trimmed.endsWith("}"))
+  ) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return value;
+    }
+  }
+
+  return value;
+}
+
 module.exports = {
   DEFAULT_CURRENCY,
   decodeCtx,
   normalizeResponse,
   normalizeError,
-  normalizePayload,
   createUUIDVars,
   pretty,
   indent,
   matchesExpected,
+  parseJsonLike,
 };

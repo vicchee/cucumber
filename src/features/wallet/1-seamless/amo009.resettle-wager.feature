@@ -10,7 +10,7 @@ Feature: AMO009 Seamless Resettle Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS resettles a wager with:
       | field          | value                |
-      | transaction_no | <transaction_uuid_1> |
+      | transaction_no | <transaction_no>     |
       | currency       | <currency>           |
       | amount         | 12.5                 |
     Then the AMO009 response should be successful
@@ -23,7 +23,7 @@ Feature: AMO009 Seamless Resettle Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS resettles a wager with:
       | field          | value                |
-      | transaction_no | <transaction_uuid_2> |
+      | transaction_no | <transaction_no>     |
       | currency       | <currency>           |
       | amount         | -4.25                |
     Then the AMO009 response should be successful

@@ -12,7 +12,7 @@ Feature: Integration Flow - Request payment then notify payment failed
   Scenario: Request payment 40 then notify payment failed restores balance to 90
     Given a request payment transaction mapping will be created for parent wager "<parent_wager_no>"
     When APISYS requests payment with:
-      | transaction_no    | <transaction_uuid_1> |
+      | transaction_no    | <transaction_no>     |
       | platform_username | <platform_username>  |
       | currency          | <currency>           |
       | amount            | -40                  |

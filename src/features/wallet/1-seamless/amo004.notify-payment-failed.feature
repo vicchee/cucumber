@@ -15,7 +15,7 @@ Feature: AMO004 Seamless Notify Payment Failed
       | amount           | -45                |
     When APISYS notifies payment failed with:
       | field           | value                |
-      | transaction_no  | <transaction_uuid_1> |
+      | transaction_no  | <transaction_no>     |
       | parent_wager_no | <parent_wager_no>    |
     Then the AMO004 response should be successful
     And the response should contain:

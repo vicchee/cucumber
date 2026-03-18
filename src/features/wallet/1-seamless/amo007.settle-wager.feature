@@ -10,7 +10,7 @@ Feature: AMO007 Seamless Settle Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS settles a wager with:
       | field                 | value                |
-      | transaction_no        | <transaction_uuid_1> |
+      | transaction_no        | <transaction_no>     |
       | currency              | <currency>           |
       | amount                | 25.75                |
       | is_partial_settlement | false                |
@@ -24,16 +24,16 @@ Feature: AMO007 Seamless Settle Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS settles a wager with:
       | field                 | value                |
-      | transaction_no        | <transaction_uuid_2> |
+      | transaction_no        | <transaction_no>     |
       | currency              | <currency>           |
       | amount                | 10                   |
       | is_partial_settlement | false                |
     And partial settlement history contains:
-      | field          | value                |
-      | transaction_no | <partial_txn_uuid_1> |
-      | amount         | 2.5                  |
-      | transaction_no | <partial_txn_uuid_2> |
-      | amount         | -1                   |
+      | field          | value                      |
+      | transaction_no | <partial_transaction_no_1> |
+      | amount         | 2.5                        |
+      | transaction_no | <partial_transaction_no_2> |
+      | amount         | -1                         |
     Then the AMO007 response should be successful
     And the response should contain:
       | field        | value               |
@@ -44,20 +44,20 @@ Feature: AMO007 Seamless Settle Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS settles a wager with:
       | field                 | value                |
-      | transaction_no        | <transaction_uuid_3> |
+      | transaction_no        | <transaction_no>     |
       | currency              | <currency>           |
       | amount                | 99                   |
       | is_partial_settlement | true                 |
     Then the AMO007 response should be successful
     And the response should contain:
       | field        | value                |
-      | reference_id | <transaction_uuid_3> |
+      | reference_id | <transaction_no>     |
     And the wallet balance in "<currency>" should remain unchanged
 
   Scenario: Validation fails when amount has more than 6 decimal places
     When APISYS settles a wager with:
       | field                 | value                |
-      | transaction_no        | <transaction_uuid_4> |
+      | transaction_no        | <transaction_no>     |
       | currency              | <currency>           |
       | amount                | 1.1234567            |
       | is_partial_settlement | false                |

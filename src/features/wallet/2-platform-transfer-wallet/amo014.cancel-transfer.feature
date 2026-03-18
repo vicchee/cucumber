@@ -10,12 +10,12 @@ Feature: AMO014 Request Cancel Transfer
     Given a successful transfer in exists for:
       | field             | value               |
       | platform_username | <platform_username> |
-      | transfer_no       | <transfer_no_1>     |
+      | transfer_no       | <transfer_no>       |
       | currency          | <currency>          |
       | amount            | 25                  |
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_1> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value               |
@@ -24,7 +24,7 @@ Feature: AMO014 Request Cancel Transfer
 
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_1> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value                  |
@@ -35,12 +35,12 @@ Feature: AMO014 Request Cancel Transfer
     And a successful transfer out exists for:
       | field             | value               |
       | platform_username | <platform_username> |
-      | transfer_no       | <transfer_no_2>     |
+      | transfer_no       | <transfer_no>       |
       | currency          | <currency>          |
       | amount            | -20                 |
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_2> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value               |
@@ -49,7 +49,7 @@ Feature: AMO014 Request Cancel Transfer
 
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_2> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value                  |
@@ -58,7 +58,7 @@ Feature: AMO014 Request Cancel Transfer
   Scenario: Cancel transfer returns reference_id when transfer does not exist and is idempotent
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_9> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value               |
@@ -67,7 +67,7 @@ Feature: AMO014 Request Cancel Transfer
 
     When APISYS requests cancel transfer with:
       | field       | value           |
-      | transfer_no | <transfer_no_9> |
+      | transfer_no | <transfer_no>   |
     Then the AMO014 response should be successful
     And the response should contain:
       | field        | value                  |

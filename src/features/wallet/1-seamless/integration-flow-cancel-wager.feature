@@ -14,7 +14,7 @@ Feature: Integration Flow - Request payment then cancel wager
       | wager_no        | <wager_no>        |
       | parent_wager_no | <parent_wager_no> |
     When APISYS requests payment with:
-      | transaction_no    | <transaction_uuid_1> |
+      | transaction_no    | <transaction_no>     |
       | platform_username | <platform_username>  |
       | currency          | <currency>           |
       | amount            | -30                  |

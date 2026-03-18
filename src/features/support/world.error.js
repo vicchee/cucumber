@@ -24,7 +24,7 @@ class WorldError extends Error {
 
       for (const [key, value] of contextEntries) {
         lines.push(indent(`${key}:`, 2));
-        lines.push(indent(value, 3));
+        lines.push(indent(value, 4));
       }
     }
 

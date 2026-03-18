@@ -10,7 +10,7 @@ Feature: AMO012 Seamless Undo Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS undoes a wager with:
       | field          | value                |
-      | transaction_no | <transaction_uuid_1> |
+      | transaction_no | <transaction_no>     |
       | currency       | <currency>           |
       | amount         | 15                   |
     Then the AMO012 response should be successful
@@ -23,7 +23,7 @@ Feature: AMO012 Seamless Undo Wager
     Given I record the current wallet balance in "<currency>"
     When APISYS undoes a wager with:
       | field          | value                |
-      | transaction_no | <transaction_uuid_2> |
+      | transaction_no | <transaction_no>     |
       | currency       | <currency>           |
       | amount         | -7                   |
     Then the AMO012 response should be successful

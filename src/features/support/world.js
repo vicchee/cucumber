@@ -1,15 +1,14 @@
 const { setWorldConstructor } = require("@cucumber/cucumber");
 const apiService = require("../../services/api.service");
 const WorldError = require("./world.error");
-const createWalletContext = require("./context/wallet.context");
 const {
   DEFAULT_CURRENCY,
   decodeCtx,
   normalizeResponse,
   normalizeError,
-  normalizePayload,
-  createUUIDVars,
   indent,
+  createUUIDVars,
+  parseJsonLike,
 } = require("./utils");
 
 class World {
@@ -27,11 +26,11 @@ class World {
     this.vars = {
       platform_username: ctx.world?.user?.platform_username,
       currency: ctx.world?.defaults?.currency ?? DEFAULT_CURRENCY,
-      ...createUUIDVars("transaction_uuid_"),
-      ...createUUIDVars("transfer_no_"),
+      transaction_no: crypto.randomUUID(),
+      transfer_no: crypto.randomUUID(),
+      session_id: crypto.randomUUID(),
+      ...createUUIDVars("partial_transaction_no_"),
     };
-    /** @type {ReturnType<typeof createWalletContext>} */
-    this.wallet = createWalletContext(this);
   }
 
   isApiSuccess(response = this.lastResponse) {
@@ -54,28 +53,26 @@ class World {
 
   error(message, context = {}) {
     return new WorldError(message, {
+      ...context,
       request: this.lastRequest,
       response: this.lastResponse,
-      ...context,
     });
   }
 
-  async attachInfo(...parts) {
+  async attachInfo(title, ...parts) {
     const lines = [];
 
+    lines.push(`${title}:`);
+
     for (const part of parts) {
-      if (part == null) continue;
-
       if (typeof part === "string") {
-        lines.push(indent(part, 1));
-        continue;
-      }
-
-      for (const [key, value] of Object.entries(part)) {
-        if (value == null) continue;
-
-        lines.push(indent(`${key}:`, 1));
-        lines.push(indent(value, 2));
+        lines.push(indent(part, 2));
+      } else {
+        for (const [key, value] of Object.entries(part || {})) {
+          if (value == null) continue;
+          lines.push(indent(`${key}:`, 2));
+          lines.push(indent(value, 4));
+        }
       }
     }
 
@@ -84,10 +81,12 @@ class World {
 
   resolve(value) {
     if (typeof value === "string") {
-      return value.replace(
+      const resolved = value.replace(
         /<([^>]+)>/g,
         (_, key) => this.vars[key] ?? `<${key}>`,
       );
+
+      return parseJsonLike(resolved);
     }
 
     if (Array.isArray(value)) {
@@ -108,19 +107,19 @@ class World {
       throw this.error("API not set in merchant settings");
     }
 
-    const requestBody = normalizePayload(this.resolve(payload));
+    const requestBody = this.resolve(payload);
     this.lastRequest = requestBody;
 
     try {
       const response = await apiService.call(method, url, requestBody);
       this.lastResponse = normalizeResponse(response);
-    } catch (error) {
+    } catch (err) {
       this.lastResponse = normalizeError(error);
     }
 
-    await this.attachInfo({
+    await this.attachInfo("Request", {
       API: `${method} ${url}`,
-      Request: this.lastRequest,
+      Payload: this.lastRequest,
       Response: this.lastResponse,
     });
 
