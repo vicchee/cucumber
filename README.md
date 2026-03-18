@@ -1,332 +1,225 @@
 # API Test Platform
 
-Async API scenario testing platform using **Express + BullMQ + Redis + Cucumber**.
+Async API scenario testing platform for **merchant wallet integration**.
 
 ---
 
-# Architecture
+# 1. Architecture & Tech Stack
+
+## Stack
+
+- Express: API layer  
+- BullMQ + Redis: async job processing  
+- Cucumber: scenario execution  
+- HTML Reporter: report generation  
+- Puppeteer: PDF export  
+
+---
+
+## Core Architecture
 
 ```mermaid
 flowchart TD
-    Frontend["Frontend"]
-    API["API Server (Express)"]
-    Redis["Redis"]
-    Queue["BullMQ Queue"]
-    Worker["Worker"]
-    Cucumber["cucumber-js execution"]
-    Reports["Report Generation"]
-    HTML["HTML Report"]
-    PDF["PDF Report"]
-    Status["Redis Job Status"]
-    Polling["Frontend Polling / WebSocket"]
-
-    Frontend -->|POST /tests/run| API
-    API -->|enqueue job| Redis
-    Redis --> Queue
-    Queue --> Worker
-    Worker --> Cucumber
-    Worker --> Reports
-    Reports --> HTML
-    Reports --> PDF
-    Worker --> Status
-    Status --> Polling
+    Client --> API["API Server"]
+    API --> Queue["BullMQ Queue"]
+    Queue --> Redis["Redis"]
+    Redis --> Worker["Worker"]
+    Worker --> Cucumber["Cucumber Runner"]
+    Cucumber --> Merchant
+    Worker --> Report["HTML + PDF"]
 ```
 
 ---
 
-# System Flow
+## Async Execution Model
+
+Test runs are executed using **Job → Queue → Worker**.
+
+### Job
+- created via `POST /tests/run`
+- represents one test run
+- tracked by `jobId`
+
+### Queue (BullMQ + Redis)
+- stores jobs
+- schedules execution
+- controls concurrency
+- supports retry and cancellation
+
+### Worker
+- processes jobs
+- selects scenarios
+- runs Cucumber
+- calls APIs via configured endpoints
+- captures request/response
+- generates reports
+
+### Why
+
+- non-blocking API
+- parallel execution
+- persistent jobs (Redis)
+- controllable runs (cancel/retry)
+
+---
+
+# 2. Execution Flow
 
 ```mermaid
 sequenceDiagram
-participant UI
-participant API
-participant Queue
-participant Worker
-participant Redis
+    participant Client
+    participant API
+    participant Queue
+    participant Worker
+    participant Cucumber
+    participant APISYS
+    participant Merchant
+    participant Report
 
-    UI->>API: POST /tests/run
-    API->>Queue: add job
-    Queue->>Worker: dispatch job
-    Worker->>Worker: run cucumber scenarios
-    Worker->>Worker: generate reports
-    Worker->>Redis: update job status
-    UI->>Redis: poll job progress
+    Client->>API: POST /tests/run
+    API->>Queue: enqueue job
+    Queue->>Worker: process job
+
+    Worker->>Cucumber: execute scenarios
+    Cucumber->>APISYS: trigger flow
+    APISYS->>Merchant: API request
+    Merchant-->>APISYS: response
+    APISYS-->>Cucumber: result
+
+    Worker->>Report: generate HTML/PDF
+    API-->>Client: status / report endpoints
+    Client->>API: GET /tests/reports
+```
+
+### Output
 
 ```
+reports/runs/<timestamp>/
+  index.html
+  report.pdf
+```
+
+Each run includes:
+
+- request + response payloads  
+- error payloads  
+- structured error context  
 
 ---
 
-# Project Structure
+# 3. Test Scenario Model
 
-```
-src
-├── config
-│ ├── client.config.js
-│ └── redis.config.js
-│
-├── queues
-│ └── test.queue.js
-│
-├── workers
-│ └── test.worker.js
-│
-├── services
-│ ├── api.service.js
-│ ├── cucumber.service.js
-│ └── report.service.js
-│
-├── controllers
-│ └── test.controller.js
-│
-├── routes
-│ └── test.routes.js
-│
-├── jobs
-│ └── job.service.js
-│
-└── utils
-  └── logger.js
+## What is Validated
 
-```
+> APISYS → Merchant requests  
+> Merchant → APISYS responses  
 
-const path = require("path");
-const fs = require("fs");
-const puppeteer = require("puppeteer");
+Checks:
 
-const MAX_REPORTS = 10;
-
-// ---------------------
-// Base Reporter
-// ---------------------
-class BaseReporter {
-constructor() {
-this.baseDir = path.join(process.cwd(), "reports");
-this.jsonDir = path.join(this.baseDir, "json");
-this.runsDir = path.join(this.baseDir, "runs");
-this.maxReports = MAX_REPORTS;
-}
-
-ensureDir(dir) {
-if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-cleanupReports() {
-if (!fs.existsSync(this.runsDir)) return;
-
-    const folders = fs
-      .readdirSync(this.runsDir)
-      .map((name) => {
-        const p = path.join(this.runsDir, name);
-        return { name, path: p, time: fs.statSync(p).mtime.getTime() };
-      })
-      .filter((f) => fs.statSync(f.path).isDirectory())
-      .sort((a, b) => a.time - b.time);
-
-    while (folders.length >= this.maxReports) {
-      const oldest = folders.shift();
-      fs.rmSync(oldest.path, { recursive: true, force: true });
-    }
-
-}
-
-async generatePdf(htmlPath, reportDir) {
-const browser = await puppeteer.launch({
-args: ["--no-sandbox", "--disable-setuid-sandbox"],
-});
-
-    const page = await browser.newPage();
-    await page.goto(`file://${htmlPath}`, { waitUntil: "networkidle0" });
-
-    const pdfPath = path.join(reportDir, "report.pdf");
-    await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
-
-    await browser.close();
-
-    return `/reports${pdfPath.replace(path.join(process.cwd(), "reports"), "")}`.replace(
-      /\\/g,
-      "/",
-    );
-
-}
-
-toPublicPath(absPath) {
-return `/reports${absPath.replace(path.join(process.cwd(), "reports"), "")}`.replace(
-/\\/g,
-"/",
-);
-}
-}
-
-// ---------------------
-// Multiple Cucumber HTML Reporter
-// ---------------------
-class MultipleCucumberReporter extends BaseReporter {
-constructor() {
-super();
-this.multipleCucumberReporter = require("multiple-cucumber-html-reporter");
-}
-
-async generate(format = "html") {
-this.ensureDir(this.jsonDir);
-this.ensureDir(this.runsDir);
-this.cleanupReports();
-
-    const files = fs
-      .readdirSync(this.jsonDir)
-      .filter((f) => f.endsWith(".json"));
-    if (!files.length) throw new Error("No Cucumber JSON files found.");
-
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const reportDir = path.join(this.runsDir, timestamp);
-    fs.mkdirSync(reportDir);
-
-    this.multipleCucumberReporter.generate({
-      jsonDir: this.jsonDir,
-      reportPath: reportDir,
-      openReportInBrowser: false,
-      displayDuration: true,
-      durationInMS: true,
-      displayReportTime: true,
-    });
-
-    const htmlPath = path.join(reportDir, "index.html");
-    if (format === "pdf") return await this.generatePdf(htmlPath, reportDir);
-    return this.toPublicPath(htmlPath);
-
-}
-}
-
-// ---------------------
-// Serenity/JS Reporter
-// ---------------------
-class SerenityReporter extends BaseReporter {
-constructor() {
-super();
-this.resultsDir = this.runsDir; // use same runs folder
-}
-
-async generate(format = "html") {
-this.ensureDir(this.runsDir);
-this.cleanupReports();
-
-    const folders = fs
-      .readdirSync(this.resultsDir)
-      .map((name) => path.join(this.resultsDir, name))
-      .filter((p) => fs.statSync(p).isDirectory())
-      .sort(
-        (a, b) =>
-          fs.statSync(b).mtime.getTime() - fs.statSync(a).mtime.getTime(),
-      );
-
-    if (!folders.length) throw new Error("No Serenity/JS reports found.");
-
-    const latestFolder = folders[0];
-    const htmlPath = path.join(latestFolder, "index.html");
-
-    if (!fs.existsSync(htmlPath)) {
-      console.warn("Serenity/JS report not found in latest folder.");
-    }
-
-    if (format === "pdf") {
-      return await this.generatePdf(htmlPath, latestFolder);
-    }
-
-    return this.toPublicPath(htmlPath);
-
-}
-}
-
-// ---------------------
-// Reporter Factory
-// ---------------------
-function getReporter() {
-const type = process.env.REPORTER_TYPE || "serenity"; // default to multiple-cucumber
-if (type === "serenity") return new SerenityReporter();
-return new MultipleCucumberReporter();
-}
-
-module.exports = getReporter();
-
-and have a default with the default cucumber report, make it configurable via a config file
-replace serenity with a clean karate implementation give me the steps to implement from the start, including my cucumber.js at root, the package json, the cucmber service if needed
-
-```
-cucumber.js
-frontend
-├── app.js
-└── index.html
-reports
-└── runs
-    └──2026-03-11T06-23-25-755Z
-        └── index.html
-src
-├── config
-│ ├── client.config.js
-│ └── redis.config.js
-│
-├── queues
-│ └── test.queue.js
-│
-├── workers
-│ └── test.worker.js
-│
-├── services
-│ ├── api.service.js
-│ ├── cucumber.service.js
-│ └── report.service.js
-│
-├── controllers
-│ └── test.controller.js
-│
-├── routes
-│ └── test.routes.js
-│
-├── jobs
-│ └── job.service.js
-│
-├── utils
-│ └── logger.js
-│
-├── server.js
-│
-└── app.js
-
-
-```
+- request structure and payload  
+- response format and values  
+- error handling  
 
 ---
 
-# Required Services
+## How Scenarios Are Determined
 
-Start Redis:
+Two inputs control execution:
 
-```bash
-redis-server
-```
+### 1. Game Wallet Mode (what scenarios to test)
 
-Run API server:
-
-```bash
-node src/server.js
-```
-
-Run worker:
-
-```bash
-node src/workers/test.worker.js
-```
+- Seamless → wallet operation APIs (request-payment, settle, etc.)  
+- Transfer Wallet → transfer APIs (transfer-in/out, cancel-transfer)  
 
 ---
 
-# API
+### 2. Merchant Wallet Mode 
 
-Run tests
+Defines the actual API endpoints to be called:
 
+- Seamless → points to merchant APIs  
+- Transfer Wallet → points to APISYS APIs  
+
+---
+
+## Resolution Flow
+
+```mermaid
+flowchart TD
+    A["Merchant's Owned Games"] --> B["Game Mode"]
+    C["Merchant's merchant_settings"] --> D["API Endpoints"]
+
+    B --> E["Determine Required Scenarios"]
+
+    E --> G["Execute Scenarios"]
+    D --> G
 ```
+
+### Rules
+
+- **Game mode determines test scenarios**
+- **Merchant mode (merchant_settings) determines API endpoints**
+
+| Merchant Mode | Game Mode | API Target |
+|--------------|----------|------------|
+| Seamless | Seamless | Merchant APIs |
+| Seamless | Transfer | Merchant APIs |
+| Transfer | Seamless | APISYS APIs |
+| Transfer | Transfer | APISYS APIs |
+
+---
+## Test Scenario Coverage
+
+### General (always executed)
+
+| Code | Feature |
+|------|--------|
+| AMO001 | get-member-wallet-balance |
+| AMO013 | notify-wager-update |
+
+---
+
+### Game Mode: Seamless (Wallet Operation APIs)
+
+| Code | Feature |
+|------|--------|
+| AMO003 | request-payment |
+| AMO004 | notify-payment-failed |
+| AMO007 | settle-wager |
+| AMO008 | cancel-wager |
+| AMO009 | resettle-wager |
+| AMO012 | undo-wager |
+
+---
+
+### Game Mode: Transfer Wallet (Transfer APIs)
+
+| Code | Feature |
+|------|--------|
+| AMO010 | transfer-in |
+| AMO011 | transfer-out |
+| AMO014 | cancel-transfer |
+
+---
+
+
+
+# 4. API Usage
+
+
+| Method | Route |
+|--------|------|
+| POST | `/tests/run` |
+| GET | `/tests/status/:id` |
+| DELETE | `/tests/cancel/:id` |
+| GET | `/tests/reports` |
+
+
+### Start Report Run
+
+```http
 POST /tests/run
 ```
-
-Body
 
 ```json
 {
@@ -334,72 +227,66 @@ Body
 }
 ```
 
-Response
+---
 
-```json
-{
-  "jobId": "123",
-  "status": "queued"
-}
+### Check Status
+
+```http
+GET /tests/status/:id
 ```
 
 ---
 
-# Queue Monitoring
+### Cancel Run
 
-BullMQ dashboard:
-
+```http
+DELETE /tests/cancel/:id
 ```
-/admin/queues
-```
-
-Features
-
-- job history
-- retries
-- progress
-- failure logs
-
-Project
-
-https://github.com/felixmosh/bull-board
 
 ---
 
-# Worker Responsibilities
+### Get Reports
 
-Worker performs:
-
-1. Execute cucumber scenarios
-2. Generate HTML report
-3. Generate PDF report
-4. Update job progress
-5. Store job metadata in Redis
-
----
-
-# Reliability
-
-Retry logic
-
-```js
-queue.add("run-tests", data, {
-  attempts: 3,
-  backoff: { type: "exponential", delay: 2000 },
-});
+```http
+GET /tests/reports
 ```
 
-Reference  
-https://docs.bullmq.io/guide/retrying-failing-jobs
+---
+
+# 5. Setup & Running
+
+## 1. Install
+
+```bash
+npm install
+```
 
 ---
 
-# Production Capabilities
+## 2. Environment
 
-✔ async job execution  
-✔ queue reliability  
-✔ job monitoring  
-✔ HTML + PDF reports  
-✔ cancellable tests  
-✔ progress tracking  
-✔ scalable workers
+```bash
+cp .env.example .env
+```
+
+Update `.env` with required values.
+
+---
+
+## 3. Start
+
+```bash
+# start redis
+redis-server
+
+# start api
+npm run dev
+
+# start worker
+npm run worker
+
+# run all
+npm run full
+```
+
+---
