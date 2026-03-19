@@ -1,18 +1,16 @@
 const { Given, When, Then } = require("@cucumber/cucumber");
 
 When("APISYS requests payment with:", async function (table) {
-  const data = Object.fromEntries(
-    table.rows().map(([field, value]) => [field, this.resolve(value)]),
-  );
+  const payload = this.tablePayload(table);
 
   await this.request(
     "POST",
     this.config.merchant_settings.request_payment_api,
     {
-      transaction_no: data.transaction_no,
-      platform_username: this.vars.platform_username,
-      currency: data.currency,
-      amount: Number(data.amount),
+      transaction_no: payload.transaction_no,
+      platform_username: payload.platform_username,
+      currency: payload.currency,
+      amount: Number(payload.amount),
     },
   );
 });

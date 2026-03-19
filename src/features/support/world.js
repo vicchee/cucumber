@@ -25,10 +25,12 @@ class World {
 
     this.vars = {
       platform_username: ctx.world?.user?.platform_username,
+      game_type: ctx.world?.user?.game_type ?? "PT_SLOT",
       currency: ctx.world?.defaults?.currency ?? DEFAULT_CURRENCY,
       transaction_no: crypto.randomUUID(),
       transfer_no: crypto.randomUUID(),
       session_id: crypto.randomUUID(),
+      ...createUUIDVars("transfer_no_"),
       ...createUUIDVars("partial_transaction_no_"),
     };
   }

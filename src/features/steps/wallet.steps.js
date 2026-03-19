@@ -13,6 +13,8 @@ async function getWalletBalance(world) {
   const data = world.responseData();
   const balance = data?.balances?.[currency];
 
+  if (!balance) throw this.error("Failed to get wallet balance");
+
   return new Decimal(balance);
 }
 
@@ -66,15 +68,24 @@ Given(
 );
 
 Given(
-  "I prepare an amount less than the balance by {float}",
+  "I prepare a valid amount less than the balance by {float}",
   async function (extra) {
     const currency = this.vars.currency;
 
     const balance =
       this.vars.beforeBalances?.[currency] ?? (await getWalletBalance(this));
 
-    const amount = new Decimal(balance).minus(extra).negated();
-    this.vars.amount_less_than_balance = amount.toString();
+    const amount = new Decimal(balance).minus(extra); // ensure positive deduction amount
+
+    if (amount.lte(0)) {
+      throw this.error(`Invalid amount for deduction`, {
+        balance: `${balance.toString()}`,
+        extra: `${extra}`,
+        deduction_amount: `${amount.toString()}`,
+      });
+    }
+
+    this.vars.deduction_amount = amount.toString();
 
     await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
       currency,
@@ -86,6 +97,29 @@ Given(
 
 Then(
   "the wallet balance in {string} should decrease by {string}",
+  async function (currencyPlaceholder, amountPlaceholder) {
+    const currency = this.resolve(currencyPlaceholder);
+    const amount = this.resolve(amountPlaceholder);
+    const before = this.vars.beforeBalances?.[currency];
+    const after = await getWalletBalance(this);
+    const expected = before.minus(amount);
+
+    assert(
+      after.equals(expected),
+      `Expected wallet ${currency} to decrease by ${amount}, before=${before.toString()}, after=${after.toString()}, expected=${expected.toString()}`,
+    );
+
+    await this.attachInfo("Wallet balance check", {
+      Currency: `${currency}`,
+      Before: `${before.toString()}`,
+      After: `${after.toString()}`,
+      "Expected decrease": `${new Decimal(amount).toString()}`,
+    });
+  },
+);
+
+Then(
+  "the wallet balance in {string} should decrease by {float}",
   async function (currencyPlaceholder, amountPlaceholder) {
     const currency = this.resolve(currencyPlaceholder);
     const amount = this.resolve(amountPlaceholder);

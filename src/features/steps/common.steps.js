@@ -38,5 +38,7 @@ Then(
     }
 
     this.vars[varName] = value;
+
+    this.attachInfo("Stored", { [varName]: value });
   },
 );

@@ -8,11 +8,13 @@ Feature: AMO014 Request Cancel Transfer
 
   Scenario: Cancel transfer returns reference_id for an existing transfer in and is idempotent
     Given a successful transfer in exists for:
-      | field             | value               |
-      | platform_username | <platform_username> |
-      | transfer_no       | <transfer_no>       |
-      | currency          | <currency>          |
-      | amount            | 25                  |
+      | field             | value                 |
+      | transfer_no       | <transfer_no>         |
+      | game_type         | <game_type>           |
+      | platform_username | <platform_username>   |
+      | currency          | <currency>            |
+      | amount            | 20                    |
+      | session_id        | <session_id>          |
     When APISYS requests cancel transfer with:
       | field       | value           |
       | transfer_no | <transfer_no>   |
@@ -33,11 +35,13 @@ Feature: AMO014 Request Cancel Transfer
   Scenario: Cancel transfer returns reference_id for an existing transfer out and is idempotent
     Given the member has positive wallet balance in "<currency>"
     And a successful transfer out exists for:
-      | field             | value               |
-      | platform_username | <platform_username> |
-      | transfer_no       | <transfer_no>       |
-      | currency          | <currency>          |
-      | amount            | -20                 |
+      | field             | value                 |
+      | transfer_no       | <transfer_no>         |
+      | game_type         | <game_type>           |
+      | platform_username | <platform_username>   |
+      | currency          | <currency>            |
+      | amount            | -20                   |
+      | session_id        | <session_id>          |
     When APISYS requests cancel transfer with:
       | field       | value           |
       | transfer_no | <transfer_no>   |

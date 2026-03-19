@@ -9,27 +9,29 @@ Feature: AMO003 Seamless Request Payment
   Scenario: Successful request payment deducts wallet balance
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
-    And I prepare an amount less than the balance by 10
+    And I prepare a valid amount less than the balance by 10
     When APISYS requests payment with:
-      | field          | value                      |
-      | transaction_no | <transaction_uuid_1>       |
-      | currency       | <currency>                 |
-      | amount         | <amount_less_than_balance> |
+      | field             | value                       |
+      | platform_username | <platform_username>         |
+      | transaction_no    | <transaction_no>            |
+      | currency          | <currency>                  |
+      | amount            | -<deduction_amount>         |
     Then the AMO003 response should be successful
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |
       | status       | 1                   |
-    And the wallet balance in "<currency>" should decrease by "<amount_less_than_balance>"
+    And the wallet balance in "<currency>" should decrease by "<deduction_amount>"
 
   Scenario: Insufficient balance returns failed status
     Given I record the current wallet balance in "<currency>"
     And I prepare an amount exceeding the balance by 10
     When APISYS requests payment with:
-      | field          | value                          |
-      | transaction_no | <transaction_no>               |          
-      | currency       | <currency>                     |
-      | amount         | <amount_exceeding_balance>  |
+      | field             | value                          |
+      | platform_username | <platform_username>            |
+      | transaction_no    | <transaction_no>               |          
+      | currency          | <currency>                     |
+      | amount            | <amount_exceeding_balance>     |
     Then the AMO003 response should be successful
     And the response should contain:
       | field        | value                |
@@ -41,10 +43,11 @@ Feature: AMO003 Seamless Request Payment
   Scenario: Zero amount request payment is allowed
     Given I record the current wallet balance in "<currency>"
     When APISYS requests payment with:
-      | field          | value                |
-      | transaction_no | <transaction_no>     |
-      | currency       | <currency>           |
-      | amount         | 0                    |
+      | field             | value                |
+      | platform_username | <platform_username>  |
+      | transaction_no    | <transaction_no>     |
+      | currency          | <currency>           |
+      | amount            | 0                    |
     Then the AMO003 response should be successful
     And the response should contain:
       | field  | value |
@@ -53,16 +56,18 @@ Feature: AMO003 Seamless Request Payment
 
   Scenario: Validation fails when amount is positive
     When APISYS requests payment with:
-      | field          | value                |
-      | transaction_no | <transaction_no>     |
-      | currency       | <currency>           |
-      | amount         | 5                    |
+      | field             | value                |
+      | platform_username | <platform_username>  |
+      | transaction_no    | <transaction_no>     |
+      | currency          | <currency>           |
+      | amount            | 5                    |
     Then the AMO003 response should fail validation
 
   Scenario: Validation fails when amount has more than 6 decimal places
     When APISYS requests payment with:
-      | field          | value                |
-      | transaction_no | <transaction_no>     |
-      | currency       | <currency>           |
-      | amount         | -1.1234567           |
+      | field             | value                |
+      | platform_username | <platform_username>  |
+      | transaction_no    | <transaction_no>     |
+      | currency          | <currency>           |
+      | amount            | -1.1234567           |
     Then the AMO003 response should fail validation
