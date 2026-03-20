@@ -1,5 +1,6 @@
 module.exports = {
   baseURL: "http://localhost:4000",
+  mockApiDomain: "http://localhost:8082",
 
   client: {
     client_id: "9b3cd904-2098-441b-a178-73b647d252a0",

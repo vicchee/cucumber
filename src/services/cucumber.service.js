@@ -8,11 +8,15 @@ exports.run = async (timestamp, ctx = {}) => {
   const runDir = path.join(jsonDir, String(timestamp));
   fs.mkdirSync(runDir, { recursive: true });
 
+  const featurePaths = ctx.featurePaths?.length
+    ? ctx.featurePaths
+    : ["src/features/**/*.feature"];
+
   const jsonFile = path.join(runDir, "report.json");
 
   const args = [
     "cucumber-js",
-    "src/features/**/*.feature",
+    ...featurePaths,
     "--require",
     "src/features/steps/**/*.js",
     "--require",

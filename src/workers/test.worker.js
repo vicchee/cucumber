@@ -12,8 +12,7 @@ async function runCucumber(jobId, jobData) {
 
     const jsonFile = await cucumberService.run(timestamp, {
       jobId,
-      merchantSettings: jobData.merchantSettings,
-      world: jobData.world,
+      ...jobData,
     });
 
     logger.info("CUCUMBER_COMPLETED", { jobId, jsonFile });
