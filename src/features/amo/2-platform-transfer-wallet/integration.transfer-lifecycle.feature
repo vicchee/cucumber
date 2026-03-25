@@ -11,47 +11,46 @@ Feature: Integration Flow - Transfer wallet lifecycle
     # transfer in
     Given I record the current wallet balance in "<currency>"
     When APISYS requests transfer in with:
-      | field             | value                |
-      | transfer_no       | <transfer_no_1>      |
-      | platform_username | <platform_username>  |
-      | currency          | <currency>           |
-      | amount            | 100                  |
+      | field             | value                       |
+      | transfer_no       | <transfer_no_1>             |
+      | platform_username | <platform_username>         |
+      | currency          | <currency>                  |
+      | amount            | 100                         |
     Then the AMO010 response should be successful
     And the wallet balance in "<currency>" should increase by 100
 
     # transfer out
     Given I record the current wallet balance in "<currency>"
     When APISYS requests transfer out with:
-      | field             | value                 |
-      | transfer_no       | <transfer_no_2>       |
-      | game_type         | <game_type_transfer_wallet>           |
-      | platform_username | <platform_username>   |
-      | currency          | <currency>            |
-      | amount            | -35                   |
-      | session_id        | <session_id>          |
+      | field             | value                       |
+      | transfer_no       | <transfer_no_2>             |
+      | game_type         | <game_type_transfer_wallet> |
+      | platform_username | <platform_username>         |
+      | currency          | <currency>                  |
+      | amount            | -35                         |
+      | session_id        | <session_id>                |
     Then the AMO011 response should be successful
-    And I store the response field "reference_id" as "amo011_reference_id"
     And the wallet balance in "<currency>" should decrease by 35
 
     # cancel transfer
     Given I record the current wallet balance in "<currency>"
     When APISYS requests cancel transfer with:
-      | field       | value           |
-      | transfer_no | <transfer_no_2> |
+      | field             | value                       |
+      | transfer_no       | <transfer_no_2>             |
     Then the AMO014 response should be successful
     And the response should contain:
-      | field        | value               |
-      | reference_id | any non-empty value |
-    And I store the response field "reference_id" as "cancel_reference_id"
+      | field             | value                       |
+      | reference_id      | any non-empty value         |
+    And I store the response field "reference_id" as "amo014_reference_id"
     And the wallet balance in "<currency>" should increase by 35
 
     # idempotent cancel
     Given I record the current wallet balance in "<currency>"
     When APISYS requests cancel transfer with:
-      | field       | value           |
-      | transfer_no | <transfer_no_2> |
+      | field             | value                       |
+      | transfer_no       | <transfer_no_2>             |
     Then the AMO014 response should be successful
     And the response should contain:
-      | field        | value                  |
-      | reference_id | <cancel_reference_id>  |
+      | field             | value                       |
+      | reference_id      | <amo014_reference_id>       |
     And the wallet balance in "<currency>" should remain unchanged
