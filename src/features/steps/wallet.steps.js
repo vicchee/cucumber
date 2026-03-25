@@ -58,44 +58,50 @@ Given(
     const balance =
       this.vars.beforeBalances?.[currency] ?? (await getWalletBalance(this));
 
-    const amount = balance.abs().plus(extra).negated();
+    const available = balance.greaterThan(0) ? balance : balance.constructor(0);
+
+    const amount = available.plus(extra);
+
     this.vars.amount_exceeding_balance = amount.toString();
 
     await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
       currency,
       balance: balance.toString(),
+      available: available.toString(),
       extra,
     });
   },
 );
 
-Given(
-  "I prepare a valid amount less than the balance by {float}",
-  async function (extra) {
-    const currency = this.vars.currency;
+Given("I prepare a deduction amount of {float}", async function (inputAmount) {
+  const currency = this.vars.currency;
 
-    const balance =
-      this.vars.beforeBalances?.[currency] ?? (await getWalletBalance(this));
+  const balance =
+    this.vars.beforeBalances?.[currency] ?? (await getWalletBalance(this));
 
-    const amount = new Decimal(balance).minus(extra);
+  const amount = new Decimal(inputAmount);
 
-    if (amount.lte(0)) {
-      throw this.error(`Invalid amount for deduction`, {
-        balance: `${balance.toString()}`,
-        extra: `${extra}`,
-        deduction_amount: `${amount.toString()}`,
-      });
-    }
+  if (amount.lte(0)) {
+    throw this.error(`Deduction amount must be positive`, {
+      amount: amount.toString(),
+    });
+  }
 
-    this.vars.deduction_amount = amount.toString();
-
-    await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
-      currency,
+  if (balance.lte(0) || amount.gte(balance)) {
+    throw this.error(`Deduction amount exceeds available balance`, {
       balance: balance.toString(),
-      extra,
+      amount: amount.toString(),
     });
-  },
-);
+  }
+
+  this.vars.deduction_amount = amount.toString();
+
+  await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
+    currency,
+    balance: balance.toString(),
+    amount: amount.toString(),
+  });
+});
 
 async function assertWalletBalanceDecrease(
   world,
@@ -148,35 +154,50 @@ Then(
   },
 );
 
+async function assertWalletBalanceIncrease(
+  world,
+  currencyPlaceholder,
+  amountPlaceholder,
+) {
+  const currency = world.resolve(currencyPlaceholder);
+  const amount = new Decimal(world.resolve(amountPlaceholder));
+  const before = world.vars.beforeBalances?.[currency];
+  const after = await getWalletBalance(world);
+  const expected = before.plus(amount);
+
+  assert(
+    after.equals(expected),
+    [
+      `Wallet balance assertion failed`,
+      `  Check             : decrease`,
+      `  Currency          : ${currency}`,
+      `  Increase amount   : ${amount.toString()}`,
+      `  Balance before    : ${before.toString()}`,
+      `  Expected balance  : ${expected.toString()}`,
+      `  Actual balance    : ${after.toString()}`,
+    ].join("\n"),
+  );
+
+  await world.attachInfo("Wallet balance check", {
+    Currency: currency,
+    Before: before.toString(),
+    After: after.toString(),
+    "Expected increase": amount.toString(),
+    Expected: expected.toString(),
+  });
+}
+
 Then(
   "the wallet balance in {string} should increase by {float}",
   async function (currencyPlaceholder, amount) {
-    const currency = this.resolve(currencyPlaceholder);
-    const before = this.vars.beforeBalances?.[currency];
-    const after = await getWalletBalance(this);
-    const amountDecimal = new Decimal(amount);
-    const expected = before.plus(amountDecimal);
+    await assertWalletBalanceIncrease(this, currencyPlaceholder, amount);
+  },
+);
 
-    assert(
-      after.equals(expected),
-      [
-        `Wallet balance assertion failed`,
-        `  Check             : increase`,
-        `  Currency          : ${currency}`,
-        `  Increase amount   : ${amountDecimal.toString()}`,
-        `  Balance before    : ${before.toString()}`,
-        `  Expected balance  : ${expected.toString()}`,
-        `  Actual balance    : ${after.toString()}`,
-      ].join("\n"),
-    );
-
-    await this.attachInfo("Wallet balance check", {
-      Currency: currency,
-      Before: before.toString(),
-      After: after.toString(),
-      "Expected increase": amountDecimal.toString(),
-      Expected: expected.toString(),
-    });
+Then(
+  "the wallet balance in {string} should increase by {string}",
+  async function (currencyPlaceholder, amount) {
+    await assertWalletBalanceIncrease(this, currencyPlaceholder, amount);
   },
 );
 

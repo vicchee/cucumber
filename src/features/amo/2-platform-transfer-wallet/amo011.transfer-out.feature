@@ -71,7 +71,7 @@ Feature: AMO011 Request Transfer Out
       | game_type         | <game_type_transfer_wallet>                    |
       | platform_username | <platform_username>            |
       | currency          | <currency>                     |
-      | amount            | <amount_exceeding_balance>     |
+      | amount            | -<amount_exceeding_balance>     |
       | session_id        | <session_id>                   |
     Then the AMO011 response should be successful
     And the response should contain:

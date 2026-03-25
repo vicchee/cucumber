@@ -15,7 +15,17 @@ Then("the response should contain:", function (table) {
   const data = this.responseData(this.lastResponse);
   const expectedPayload = this.tablePayload(table);
 
-  Object.entries(expectedPayload).forEach(([field, expected]) => {
+  const failReasonMap = {
+    1: "Timeout",
+    2: "Cancelled",
+    3: "Insufficient balance",
+    4: "Password-free limit exceeded",
+    5: "Single bet limit exceeded",
+    6: "Single event limit exceeded",
+    99: "Other",
+  };
+
+  for (const [field, expected] of Object.entries(expectedPayload)) {
     const actual = data?.[field];
 
     if (!matchesExpected(actual, expected)) {
@@ -23,9 +33,14 @@ Then("the response should contain:", function (table) {
         field,
         expected,
         actual,
+        ...(data?.status === 2 &&
+          data?.fail_reason && {
+            fail_reason: `${data.fail_reason} (${failReasonMap[data.fail_reason]})`,
+            ...(data.fail_reason === 99 && { fail_message: data.fail_message }),
+          }),
       });
     }
-  });
+  }
 });
 
 Then(

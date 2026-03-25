@@ -23,6 +23,25 @@ class World {
 
     this.config = { merchant_settings: context.merchant_settings ?? {} };
 
+    // helpers
+    const formatTimestamp = (date = new Date()) => {
+      const pad = (n) => n.toString().padStart(2, "0");
+      return (
+        date.getFullYear().toString() +
+        pad(date.getMonth() + 1) +
+        pad(date.getDate()) +
+        pad(date.getHours()) +
+        pad(date.getMinutes()) +
+        pad(date.getSeconds())
+      );
+    };
+
+    const shortUUID = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+
+    const gameServiceCode = context.game_service_code ?? "0001";
+
+    const parentWagerNo = `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`;
+
     this.vars = {
       platform_username: context.user?.platform_username,
       currency: context.defaults?.currency ?? DEFAULT_CURRENCY,
@@ -39,8 +58,13 @@ class World {
 
       notification_type: context.notification_type ?? "typeA",
 
-      wager_no: `wager-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      origin_wager_no: `origin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      parent_wager_no: parentWagerNo,
+      origin_wager_no: parentWagerNo,
+
+      wager_no: `${parentWagerNo}-1`,
+      wager_no_1: `${parentWagerNo}-1`,
+      wager_no_2: `${parentWagerNo}-2`,
+
       ticket_no: `ticket-${crypto.randomUUID()}`,
 
       wager_time: context.wager_time ?? now,
@@ -77,6 +101,7 @@ class World {
 
       is_system_reward: context.is_system_reward ?? false,
 
+      ...createUUIDVars("transaction_no_"),
       ...createUUIDVars("transfer_no_"),
       ...createUUIDVars("partial_transaction_no_"),
     };

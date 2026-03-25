@@ -31,13 +31,11 @@ exports.call = async (method, path, body = {}) => {
 
   try {
     const res = await axios(requestConfig);
-    // always store response details
     return {
       status: res.status,
       body: res.data,
     };
   } catch (err) {
-    // capture failed response (HTTP 4xx/5xx)
     const status = err.response?.status;
     const data = err.response?.data;
 
