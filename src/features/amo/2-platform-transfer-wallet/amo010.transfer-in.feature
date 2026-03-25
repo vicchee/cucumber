@@ -14,14 +14,14 @@ Feature: AMO010 Request Transfer In
       | game_type         | <game_type_transfer_wallet> |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
-      | amount            | 75.125                      |
+      | amount            | 175.125                      |
       | session_id        | <session_id>                |
     Then the AMO010 response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
       | status            | 1                           |
-    And the wallet balance in "<currency>" should increase by 75.125
+    And the wallet balance in "<currency>" should increase by 175.125
 
   Scenario: Repeating the same transfer_no is idempotent
     Given I record the current wallet balance in "<currency>"
