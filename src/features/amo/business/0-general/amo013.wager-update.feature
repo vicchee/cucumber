@@ -10,18 +10,18 @@ Feature: AMO013 Notify Wager Update
     When APISYS notifies wager update with payload:
       """
       {
-        "notification_type": "<notification_type>",
+        "notification_type": <notification_type>,
         "notifications": [
           {
-            "game_type": "<game_type_transfer_wallet>",
-            "game_key": "<game_key_transfer_wallet>",
-            "wager_no": "<wager_no>",
+            "game_type": <game_type_transfer_wallet>,
+            "game_key": <game_key_transfer_wallet>,
+            "wager_no": <wager_no>,
             "origin_wager_no": null,
-            "ticket_no": "<ticket_no>",
-            "platform_username": "<platform_username>",
+            "ticket_no": <ticket_no>,
+            "platform_username": <platform_username>,
             "type": <wager_type.normal_wager>,
             "status": <wager_status.settled>,
-            "currency": "<currency>",
+            "currency": <currency>,
             "amount": 10.1,
             "payment_amount": 10.1,
             "effective_amount": 10,
@@ -39,18 +39,18 @@ Feature: AMO013 Notify Wager Update
     When APISYS notifies wager update with payload:
       """
       {
-        "notification_type": "<notification_type>",
+        "notification_type": <notification_type>,
         "notifications": [
           {
-            "game_type": "<game_type_transfer_wallet>",
-            "game_key": "<game_key_transfer_wallet>",
-            "wager_no": "<wager_no>",
-            "origin_wager_no": "<origin_wager_no>",
-            "ticket_no": "<ticket_no>",
-            "platform_username": "<platform_username>",
-            "type": "<wager_type.normal_wager>",
-            "status": "<wager_status.resettled>",
-            "currency": "<currency>",
+            "game_type": <game_type_transfer_wallet>,
+            "game_key": <game_key_transfer_wallet>,
+            "wager_no": <wager_no>,
+            "origin_wager_no": <origin_wager_no>,
+            "ticket_no": <ticket_no>,
+            "platform_username": <platform_username>,
+            "type": <wager_type.normal_wager>,
+            "status": <wager_status.resettled>,
+            "currency": <currency>,
             "amount": 10.1,
             "payment_amount": 10.1,
             "effective_amount": 10,
@@ -60,15 +60,15 @@ Feature: AMO013 Notify Wager Update
             "is_system_reward": <is_system_reward>
           },
           {
-            "game_type": "<game_type_seamless>",
-            "game_key": "<game_key_seamless>",
-            "wager_no": "<wager_no>",
+            "game_type": <game_type_seamless>,
+            "game_key": <game_key_seamless>,
+            "wager_no": <wager_no>,
             "origin_wager_no": null,
             "ticket_no": null,
-            "platform_username": "<platform_username>",
-            "type": "<wager_type.normal_wager>",
-            "status": "<wager_status.settled>",
-            "currency": "<currency>",
+            "platform_username": <platform_username>,
+            "type": <wager_type.normal_wager>,
+            "status": <wager_status.settled>,
+            "currency": <currency>,
             "amount": 5.1,
             "payment_amount": 5.1,
             "effective_amount": 5,
@@ -86,18 +86,18 @@ Feature: AMO013 Notify Wager Update
     When APISYS notifies wager update with payload:
       """
       {
-        "notification_type": "<notification_type>",
+        "notification_type": <notification_type>,
         "notifications": [
           {
-            "game_type": "<game_type_seamless>",
-            "game_key": "<game_key_seamless>",
-            "wager_no": "<wager_no>",
+            "game_type": <game_type_seamless>,
+            "game_key": <game_key_seamless>,
+            "wager_no": <wager_no>,
             "origin_wager_no": null,
             "ticket_no": null,
-            "platform_username": "<platform_username>",
-            "type": "<wager_type.normal_wager>",
-            "status": "<wager_status.pending>",
-            "currency": "<currency>",
+            "platform_username": <platform_username>,
+            "type": <wager_type.normal_wager>,
+            "status": <wager_status.pending>,
+            "currency": <currency>,
             "amount": 5.1,
             "payment_amount": 5.1,
             "effective_amount": 5,

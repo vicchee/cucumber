@@ -80,13 +80,24 @@ function matchesExpected(actual, expected) {
   return actual === normalizeExpected(expected);
 }
 
+// safely resolve nested paths like 'a.b.c'
+function getValueByPath(obj, path) {
+  if (path in obj) return obj[path];
+  return path.split(".").reduce((acc, key) => acc?.[key], obj);
+}
+
+function isJsonLike(value) {
+  const trimmed = value.trim();
+  return (
+    (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+    (trimmed.startsWith("{") && trimmed.endsWith("}"))
+  );
+}
+
 function parseJsonLike(value) {
   const trimmed = value.trim();
 
-  if (
-    (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-    (trimmed.startsWith("{") && trimmed.endsWith("}"))
-  ) {
+  if (isJsonLike(value)) {
     try {
       return JSON.parse(trimmed);
     } catch {
@@ -106,5 +117,7 @@ module.exports = {
   pretty,
   indent,
   matchesExpected,
+  getValueByPath,
   parseJsonLike,
+  isJsonLike,
 };

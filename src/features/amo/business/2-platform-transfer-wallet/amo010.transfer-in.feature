@@ -14,7 +14,7 @@ Feature: AMO010 Request Transfer In
       | game_type         | <game_type_transfer_wallet> |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
-      | amount            | 175.125                      |
+      | amount            | 175.125                     |
       | session_id        | <session_id>                |
     Then the AMO010 response should be successful
     And the response should contain:

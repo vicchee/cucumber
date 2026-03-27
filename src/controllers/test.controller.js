@@ -133,10 +133,10 @@ function resolveFeaturePaths(games) {
 
   const all = "src/features/**/*.feature";
   const amoAll = "src/features/amo/**/*.feature";
-  const amoGeneral = "src/features/amo/0-general/*.feature";
-  const amoSeamless = "src/features/amo/1-seamless/*.feature";
+  const amoGeneral = "src/features/amo/**/0-general/*.feature";
+  const amoSeamless = "src/features/amo/**/1-seamless/*.feature";
   const amoPlatformTransferWallet =
-    "src/features/amo/2-platform-transfer-wallet/*.feature";
+    "src/features/amo/**/2-platform-transfer-wallet/*.feature";
 
   if (hasNull) {
     return [amoAll];

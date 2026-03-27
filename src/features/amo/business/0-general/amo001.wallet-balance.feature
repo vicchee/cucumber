@@ -8,15 +8,26 @@ Feature: AMO001 Get Member Wallet Balance
 
   Scenario: Get balances for requested currencies
     When APISYS requests member wallet balances with:
-      | field             | value                   |
-      | platform_username | <platform_username>     |
-      | currencies        | ["CNY","THB"]           |
+      | field             | value               |
+      | platform_username | <platform_username> |
+      | currencies        | [<currency>]        |
     Then the AMO001 response should be successful
     And the response should contain balances for:
-      | field             | value                   |
-      | platform_username | <platform_username>     |
-      | currencies        | ["CNY","THB"]           |
-      
+      | field             | value               |
+      | platform_username | <platform_username> |
+      | currencies        | [<currency>]        |
+
+  Scenario: Get balances for all supported currencies
+    When APISYS requests member wallet balances with:
+      | field             | value               |
+      | platform_username | <platform_username> |
+      | currencies        | <currencies>        |
+    Then the AMO001 response should be successful
+    And the response should contain balances for:
+      | field             | value               |
+      | platform_username | <platform_username> |
+      | currencies        | <currencies>        |
+
   Scenario: Validation fails when platform username is empty
     When APISYS requests member wallet balances with:
       | field             | value                   |

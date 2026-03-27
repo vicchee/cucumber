@@ -9,7 +9,10 @@ const {
   indent,
   createUUIDVars,
   parseJsonLike,
+  isJsonLike,
+  getValueByPath,
 } = require("./utils");
+const { CURRENCIES } = require("./constants");
 
 class World {
   constructor({ attach }) {
@@ -45,6 +48,7 @@ class World {
     this.vars = {
       platform_username: context.user?.platform_username,
       currency: context.defaults?.currency ?? DEFAULT_CURRENCY,
+      currencies: context.currencies ?? Object.values(CURRENCIES),
 
       game_type_seamless: context.game_type_seamless ?? "GGL",
       game_type_transfer_wallet: context.game_type_transfer_wallet ?? "PT_SLOT",
@@ -108,29 +112,41 @@ class World {
   }
 
   resolve(value) {
-    // replace placeholders e.g. '<type.b>' -> this.vars.['type']?.['b']
     if (typeof value === "string") {
-      const replaced = value.replace(/<([^>]+)>/g, (_, path) => {
-        const resolved =
-          path in this.vars
-            ? this.vars[path]
-            : path.split(".").reduce((obj, part) => obj?.[part], this.vars);
+      const trimmed = value.trim();
+      const fullMatch = trimmed.match(/^<([^>]+)>$/);
 
-        return resolved ?? `<${path}>`;
+      if (fullMatch) {
+        const resolved = getValueByPath(this.vars, fullMatch[1]);
+        return resolved ?? value;
+      }
+
+      // replace placeholders e.g. '<type.b>' -> this.vars['type']?.['b']
+      const replaced = value.replace(/<([^>]+)>/g, (_, path) => {
+        const resolved = getValueByPath(this.vars, path);
+
+        if (resolved === undefined) {
+          return `<${path}>`;
+        }
+
+        // JSON-like ("[]" / "{}"): stringify values to keep valid JSON
+        if (isJsonLike(value)) {
+          return JSON.stringify(resolved);
+        }
+
+        return resolved;
       });
 
-      const parsed = parseJsonLike(replaced);
-
-      return parsed;
+      return parseJsonLike(replaced);
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) => this.resolve(item));
+      return value.map((v) => this.resolve(v));
     }
 
     if (value && typeof value === "object") {
       return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, this.resolve(item)]),
+        Object.entries(value).map(([k, v]) => [k, this.resolve(v)]),
       );
     }
 
