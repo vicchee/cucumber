@@ -8,7 +8,7 @@ Feature: AMO014 Request Cancel Transfer
 
   Scenario: Cancel transfer returns reference_id for an existing transfer in and is idempotent
     # request transfer in
-    When I call AMO010 API with:
+    When I call AMO010 "Request Transfer In" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -19,7 +19,7 @@ Feature: AMO014 Request Cancel Transfer
     Then the response should be successful
     
     # cancel transfer
-    When I call AMO011 API with:
+    When I call AMO014 "Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful
@@ -29,7 +29,7 @@ Feature: AMO014 Request Cancel Transfer
     And I store the response field "reference_id" as "amo014_reference_id"
 
     # cancel transfer again to verify idempotency
-    When I call AMO014 API with:
+    When I call AMO014 "Duplicate Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful
@@ -41,7 +41,7 @@ Feature: AMO014 Request Cancel Transfer
     Given the member has positive wallet balance in "<currency>"
     
     # request transfer out
-    When I call AMO011 API with:
+    When I call AMO011 "Request Transfer Out" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -52,7 +52,7 @@ Feature: AMO014 Request Cancel Transfer
     Then the response should be successful
 
     # cancel transfer
-    When I call AMO014 API with:
+    When I call AMO014 "Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful
@@ -62,7 +62,7 @@ Feature: AMO014 Request Cancel Transfer
     And I store the response field "reference_id" as "amo014_reference_id"
 
     # cancel transfer again to verify idempotency
-    When I call AMO014 API with:
+    When I call AMO014 "Duplicate Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful
@@ -71,7 +71,7 @@ Feature: AMO014 Request Cancel Transfer
       | reference_id      | <amo014_reference_id>       |
 
   Scenario: Cancel transfer returns reference_id when transfer does not exist and is idempotent
-    When I call AMO014 API with:
+    When I call AMO014 "Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful
@@ -81,7 +81,7 @@ Feature: AMO014 Request Cancel Transfer
     And I store the response field "reference_id" as "amo014_reference_id"
 
     # cancel transfer again to verify idempotency
-    When I call AMO014 API with:
+    When I call AMO014 "Duplicate Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
     Then the response should be successful

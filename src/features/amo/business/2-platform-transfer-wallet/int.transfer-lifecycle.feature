@@ -10,18 +10,18 @@ Feature: Integration: Transfer Wallet Lifecycle
 
     # transfer in
     Given I record the current wallet balance in "<currency>"
-    When I call AMO010 API with:
+    When I call AMO010 "Request Transfer In" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_1>             |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
-      | amount            | 100                         |
+      | amount            | 100000.123456               |
     Then the response should be successful
-    And the wallet balance in "<currency>" should increase by 100
+    And the wallet balance in "<currency>" should increase by 100000.123456 
 
     # transfer out
     Given I record the current wallet balance in "<currency>"
-    When I call AMO011 API with:
+    When I call AMO011 "Request Transfer Out" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
       | game_type         | <game_type_transfer_wallet> |
@@ -34,7 +34,7 @@ Feature: Integration: Transfer Wallet Lifecycle
 
     # cancel transfer
     Given I record the current wallet balance in "<currency>"
-    When I call AMO014 API with:
+    When I call AMO014 "Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
     Then the response should be successful
@@ -46,7 +46,7 @@ Feature: Integration: Transfer Wallet Lifecycle
 
     # idempotent cancel
     Given I record the current wallet balance in "<currency>"
-    When I call AMO014 API with:
+    When I call AMO014 "Duplicate Cancel Transfer" API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
     Then the response should be successful
