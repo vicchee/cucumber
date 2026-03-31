@@ -8,7 +8,7 @@ Feature: AMO012 Seamless Undo Wager
 
   Scenario: Undo wager increases wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS undoes a wager with:
+    When I call AMO012 API with:
       | field             | value                     |
       | transaction_no    | <transaction_no>          |
       | game_key          | <game_key>                |
@@ -24,7 +24,7 @@ Feature: AMO012 Seamless Undo Wager
       | metadata_type     | <metadata_type>           |
       | wager_time        | <wager_time>              |
       | is_system_reward  | <is_system_reward>        |
-    Then the AMO012 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |
@@ -32,7 +32,7 @@ Feature: AMO012 Seamless Undo Wager
 
   Scenario: Undo wager with zero amount does not change wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS undoes a wager with:
+    When I call AMO012 API with:
       | field             | value                     |
       | transaction_no    | <transaction_no>          |
       | game_key          | <game_key>                |
@@ -48,7 +48,7 @@ Feature: AMO012 Seamless Undo Wager
       | metadata_type     | <metadata_type>           |
       | wager_time        | <wager_time>              |
       | is_system_reward  | <is_system_reward>        |
-    Then the AMO012 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |

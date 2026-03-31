@@ -7,7 +7,8 @@ Feature: AMO014 Request Cancel Transfer
     Given a merchant member exists
 
   Scenario: Cancel transfer returns reference_id for an existing transfer in and is idempotent
-    Given a successful transfer in exists for:
+    # request transfer in
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -15,26 +16,32 @@ Feature: AMO014 Request Cancel Transfer
       | currency          | <currency>                  |
       | amount            | 20                          |
       | session_id        | <session_id>                |
-    When APISYS requests cancel transfer with:
+    Then the response should be successful
+    
+    # cancel transfer
+    When I call AMO011 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
     And I store the response field "reference_id" as "amo014_reference_id"
 
-    When APISYS requests cancel transfer with:
+    # cancel transfer again to verify idempotency
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | <amo014_reference_id>       |
 
   Scenario: Cancel transfer returns reference_id for an existing transfer out and is idempotent
     Given the member has positive wallet balance in "<currency>"
-    And a successful transfer out exists for:
+    
+    # request transfer out
+    When I call AMO011 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -42,37 +49,42 @@ Feature: AMO014 Request Cancel Transfer
       | currency          | <currency>                  |
       | amount            | -20                         |
       | session_id        | <session_id>                |
-    When APISYS requests cancel transfer with:
+    Then the response should be successful
+
+    # cancel transfer
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
     And I store the response field "reference_id" as "amo014_reference_id"
 
-    When APISYS requests cancel transfer with:
+    # cancel transfer again to verify idempotency
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | <amo014_reference_id>       |
 
   Scenario: Cancel transfer returns reference_id when transfer does not exist and is idempotent
-    When APISYS requests cancel transfer with:
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
     And I store the response field "reference_id" as "amo014_reference_id"
 
-    When APISYS requests cancel transfer with:
+    # cancel transfer again to verify idempotency
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | <amo014_reference_id>       |

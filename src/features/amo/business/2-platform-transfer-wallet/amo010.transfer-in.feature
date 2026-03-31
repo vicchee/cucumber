@@ -8,7 +8,7 @@ Feature: AMO010 Request Transfer In
 
   Scenario: Transfer in increases wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -16,7 +16,7 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | 175.125                     |
       | session_id        | <session_id>                |
-    Then the AMO010 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
@@ -25,7 +25,7 @@ Feature: AMO010 Request Transfer In
 
   Scenario: Repeating the same transfer_no is idempotent
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -33,7 +33,7 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | 50                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
@@ -42,7 +42,7 @@ Feature: AMO010 Request Transfer In
     And the wallet balance in "<currency>" should increase by 50
 
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -50,7 +50,7 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | 50                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field        | value                            |
       | reference_id | <amo010_reference_id>            |
@@ -59,7 +59,7 @@ Feature: AMO010 Request Transfer In
 
   Scenario: Zero amount transfer does not change balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -67,7 +67,7 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | 0                           |
       | session_id        | <session_id>                |
-    Then the AMO010 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
@@ -75,7 +75,7 @@ Feature: AMO010 Request Transfer In
     And the wallet balance in "<currency>" should remain unchanged
 
   Scenario: Validation fails when amount precision is invalid
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -83,10 +83,10 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | 1.1234567                   |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when amount is negative
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
@@ -94,54 +94,54 @@ Feature: AMO010 Request Transfer In
       | currency          | <currency>                  |
       | amount            | -1                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when transfer_no is missing
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | game_type         | <game_type_transfer_wallet> |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
       | amount            | 10                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when platform_username is missing
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
       | currency          | <currency>                  |
       | amount            | 10                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when currency is missing
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
       | platform_username | <platform_username>         |
       | amount            | 10                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when game_type is missing
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
       | amount            | 10                          |
       | session_id        | <session_id>                |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when session_id is missing
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no>               |
       | game_type         | <game_type_transfer_wallet> |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
       | amount            | 10                          |
-    Then the AMO010 response should fail validation
+    Then the response should fail validation

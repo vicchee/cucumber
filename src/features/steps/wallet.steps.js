@@ -5,8 +5,10 @@ const Decimal = require("decimal.js");
 // AMO001 - Get one specific member wallet balance
 async function getWalletBalance(world) {
   const currency = world.vars.currency;
-  await world.request("GET", world.config.merchant_settings.get_payment_api, {
-    platform_username: world.vars.platform_username,
+  const platformUsername = world.vars.platform_username;
+  const apiDetails = world.apiMap["AMO001"];
+  await world.request(apiDetails.method, apiDetails.url, {
+    platform_username: platformUsername,
     currencies: [currency],
   });
 
@@ -14,7 +16,9 @@ async function getWalletBalance(world) {
   const balance = data?.balances?.[currency];
 
   if (balance !== 0 && !balance) {
-    throw world.error("Failed to get wallet balance");
+    throw world.error("Failed to get wallet balance", {
+      response: world.responseData(),
+    });
   }
 
   return new Decimal(balance);

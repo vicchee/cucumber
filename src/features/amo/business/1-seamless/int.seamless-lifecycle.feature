@@ -11,7 +11,7 @@ Feature: Integration: Seamless Wager Lifecycle
     # request payment
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
-    When APISYS requests payment with:
+    When I call AMO003 "Request Payment" API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no_1>        |
       | game_key              | <game_key_seamless>       |
@@ -20,7 +20,7 @@ Feature: Integration: Seamless Wager Lifecycle
       | currency              | <currency>                |
       | amount                | -10                       |
       | orders                | [{ "wager_no": "<wager_no>", "ticket_no": "<ticket_no>", "type": <wager_type.normal_wager>, "amount": 10, "payment_amount": 10, "effective_amount": 10, "metadata": <metadata>, "metadata_type": <metadata_type>, "wager_time": <wager_time>, "is_system_reward": false }]                        |
-    Then the AMO003 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | any non-empty value       |
@@ -29,7 +29,7 @@ Feature: Integration: Seamless Wager Lifecycle
 
     # settle wager
     Given I record the current wallet balance in "<currency>"
-    When APISYS settles a wager with:
+    When I call AMO007 "Settle Wager" API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no_2>        |
       | game_key              | <game_key_seamless>       |
@@ -44,7 +44,7 @@ Feature: Integration: Seamless Wager Lifecycle
       | metadata_type         | <metadata_type>           |
       | is_system_reward      | false                     |
       | is_partial_settlement | false                     |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | any non-empty value       |
@@ -52,7 +52,7 @@ Feature: Integration: Seamless Wager Lifecycle
 
     # resettle wager downward
     Given I record the current wallet balance in "<currency>"
-    When APISYS resettles a wager with:
+    When I call AMO009 "Resettle Wager" API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no_3>        |
       | game_key              | <game_key_seamless>       |
@@ -69,7 +69,7 @@ Feature: Integration: Seamless Wager Lifecycle
       | wager_time            | <wager_time>              |
       | settlement_time       | <settlement_time>         |
       | is_system_reward      | false                     |
-    Then the AMO009 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | any non-empty value       |
@@ -77,7 +77,7 @@ Feature: Integration: Seamless Wager Lifecycle
 
     # undo wager
     Given I record the current wallet balance in "<currency>"
-    When APISYS undoes a wager with:
+    When I call AMO012 "Undo Wager" API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no_4>        |
       | game_key              | <game_key_seamless>       |
@@ -93,7 +93,7 @@ Feature: Integration: Seamless Wager Lifecycle
       | metadata_type         | <metadata_type>           |
       | wager_time            | <wager_time>              |
       | is_system_reward      | false                     |
-    Then the AMO012 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | any non-empty value       |

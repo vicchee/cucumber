@@ -25,11 +25,59 @@ exports.runTests = async (req, res) => {
     cancel_transfer_api: `${domain}/api/v1/transfer-wallet/cancel-transfer`,
     notify_wager_api: `${mockApiDomain}/wager/notify`,
   };
+
+  const apiMap = {
+    AMO001: {
+      method: "GET",
+      url: merchantSettings.get_payment_api,
+    },
+    AMO003: {
+      method: "POST",
+      url: merchantSettings.request_payment_api,
+    },
+    AMO004: {
+      method: "POST",
+      url: merchantSettings.notify_payment_failed_api,
+    },
+    AMO007: {
+      method: "POST",
+      url: merchantSettings.settle_order_api,
+    },
+    AMO008: {
+      method: "POST",
+      url: merchantSettings.cancel_order_api,
+    },
+    AMO009: {
+      method: "POST",
+      url: merchantSettings.resettle_wager_api,
+    },
+    AMO010: {
+      method: "POST",
+      url: merchantSettings.deposit_payment_api,
+    },
+    AMO011: {
+      method: "POST",
+      url: merchantSettings.withdraw_payment_api,
+    },
+    AMO012: {
+      method: "POST",
+      url: merchantSettings.undo_wager_api,
+    },
+    AMO013: {
+      method: "POST",
+      url: merchantSettings.notify_wager_api,
+    },
+    AMO014: {
+      method: "POST",
+      url: merchantSettings.cancel_transfer_api,
+    },
+  };
+
   const worldParams = {
     user: {
       platform_username,
     },
-    merchant_settings: merchantSettings,
+    apiMap,
     defaults: { currency },
   };
 

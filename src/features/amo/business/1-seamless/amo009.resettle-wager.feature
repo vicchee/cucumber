@@ -8,7 +8,7 @@ Feature: AMO009 Seamless Resettle Wager
 
   Scenario: Resettlement increases the wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS resettles a wager with:
+    When I call AMO009 API with:
       | field             | value                     |
       | transaction_no    | <transaction_no>          |
       | game_key          | <game_key>                |
@@ -25,7 +25,7 @@ Feature: AMO009 Seamless Resettle Wager
       | wager_time        | <wager_time>              |
       | settlement_time   | <settlement_time>         |
       | is_system_reward  | <is_system_reward>        |
-    Then the AMO009 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |
@@ -33,7 +33,7 @@ Feature: AMO009 Seamless Resettle Wager
 
   Scenario: Resettlement decreases the wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS resettles a wager with:
+    When I call AMO009 API with:
       | field             | value                     |
       | transaction_no    | <transaction_no>          |
       | game_key          | <game_key>                |
@@ -50,7 +50,7 @@ Feature: AMO009 Seamless Resettle Wager
       | wager_time        | <wager_time>              |
       | settlement_time   | <settlement_time>         |
       | is_system_reward  | <is_system_reward>        |
-    Then the AMO009 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |

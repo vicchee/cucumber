@@ -1,4 +1,4 @@
-const { setWorldConstructor } = require("@cucumber/cucumber");
+const { setWorldConstructor, DataTable } = require("@cucumber/cucumber");
 const apiService = require("../../services/api.service");
 const WorldError = require("./world.error");
 const {
@@ -29,7 +29,7 @@ class World {
     const gameServiceCode = params.game_service_code ?? "0001";
     const parentWagerNo = `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`;
 
-    this.config = { merchant_settings: params.merchant_settings ?? {} };
+    this.apiMap = params.apiMap ?? {};
 
     this.vars = {
       platform_username: params.user?.platform_username,
@@ -141,20 +141,31 @@ class World {
     return value;
   }
 
-  tablePayload(table) {
-    return Object.fromEntries(
-      table
-        .raw()
-        .slice(1) // skip header row: ["field", "value"]
-        .map(([key, value]) => [key, this.resolve(value)]),
-    );
+  parsePayload(arg) {
+    if (!arg) {
+      return undefined;
+    }
+
+    if (arg instanceof DataTable) {
+      return Object.fromEntries(
+        arg
+          .raw()
+          .slice(1) // skip header row: ["field", "value"]
+          .map(([key, value]) => [key, this.resolve(value)]),
+      );
+    }
+
+    if (typeof arg === "string") {
+      return this.resolve(arg);
+    }
+
+    throw this.error("Unsupported payload argument type", {
+      type: typeof arg,
+      value: arg,
+    });
   }
 
   async request(method, url, payload = {}) {
-    if (!url) {
-      throw this.error("API not set in merchant settings");
-    }
-
     const requestBody = this.resolve(payload);
     this.lastRequest = requestBody;
 

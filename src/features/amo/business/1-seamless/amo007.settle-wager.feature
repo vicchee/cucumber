@@ -8,7 +8,7 @@ Feature: AMO007 Seamless Settle Wager
 
   Scenario: Full settlement increases wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no>          |
       | game_key              | <game_key>                |
@@ -23,7 +23,7 @@ Feature: AMO007 Seamless Settle Wager
       | metadata_type         | <metadata_type>           |
       | is_system_reward      | <is_system_reward>        |
       | is_partial_settlement | false                     |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | any non-empty value       |
@@ -31,7 +31,7 @@ Feature: AMO007 Seamless Settle Wager
 
   Scenario: Final settlement increases wallet balance with partial settlement history
     Given I record the current wallet balance in "<currency>"
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                      | value                     |
       | transaction_no             | <transaction_no>          |
       | game_key                   | <game_key>                |
@@ -47,7 +47,7 @@ Feature: AMO007 Seamless Settle Wager
       | is_system_reward           | <is_system_reward>        |
       | is_partial_settlement      | false                     |
       | partial_settlement_history | [{ "transaction_no": <partial_transaction_no_1>, "amount": 2.5, "settlement_time": <settlement_time> }, { "transaction_no": <partial_transaction_no_2>, "amount": 1, "settlement_time": <settlement_time> }] |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                      | value                     |
       | reference_id               | any non-empty value       |
@@ -55,7 +55,7 @@ Feature: AMO007 Seamless Settle Wager
 
   Scenario: Partial settlement does not change wallet balance
     Given I record the current wallet balance in "<currency>"
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no>          |
       | game_key              | <game_key>                |
@@ -70,7 +70,7 @@ Feature: AMO007 Seamless Settle Wager
       | metadata_type         | <metadata_type>           |
       | is_system_reward      | <is_system_reward>        |
       | is_partial_settlement | true                      |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                     |
       | reference_id          | <transaction_no>          |
@@ -79,7 +79,7 @@ Feature: AMO007 Seamless Settle Wager
   Scenario: Final settlement applies prior partial settlement for the same wager
     Given I record the current wallet balance in "<currency>"
 
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                 | value                      |
       | transaction_no        | <partial_transaction_no_1> |
       | game_key              | <game_key>                 |
@@ -94,14 +94,14 @@ Feature: AMO007 Seamless Settle Wager
       | metadata_type         | <metadata_type>            |
       | is_system_reward      | <is_system_reward>         |
       | is_partial_settlement | true                       |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                 | value                      |
       | reference_id          | <partial_transaction_no_1> |
     And the wallet balance in "<currency>" should remain unchanged
 
     Given I record the current wallet balance in "<currency>"
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                      | value                     |
       | transaction_no             | <transaction_no>          |
       | game_key                   | <game_key>                |
@@ -117,14 +117,14 @@ Feature: AMO007 Seamless Settle Wager
       | is_system_reward           | <is_system_reward>        |
       | is_partial_settlement      | false                     |
       | partial_settlement_history | [{ "transaction_no": <partial_transaction_no_1>, "amount": 5, "settlement_time": <settlement_time> }] |
-    Then the AMO007 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field                      | value                     |
       | reference_id               | any non-empty value       |
     And the wallet balance in "<currency>" should increase by 15
 
   Scenario: Reject settlement when amount precision exceeds 6 decimal places
-    When APISYS settles a wager with:
+    When I call AMO007 API with:
       | field                 | value                     |
       | transaction_no        | <transaction_no>          |
       | game_key              | <game_key>                |
@@ -139,4 +139,4 @@ Feature: AMO007 Seamless Settle Wager
       | metadata_type         | <metadata_type>           |
       | is_system_reward      | <is_system_reward>        |
       | is_partial_settlement | false                     |
-    Then the AMO007 response should fail validation
+    Then the response should fail validation

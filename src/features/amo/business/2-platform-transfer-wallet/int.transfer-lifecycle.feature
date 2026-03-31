@@ -10,18 +10,18 @@ Feature: Integration: Transfer Wallet Lifecycle
 
     # transfer in
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer in with:
+    When I call AMO010 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_1>             |
       | platform_username | <platform_username>         |
       | currency          | <currency>                  |
       | amount            | 100                         |
-    Then the AMO010 response should be successful
+    Then the response should be successful
     And the wallet balance in "<currency>" should increase by 100
 
     # transfer out
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests transfer out with:
+    When I call AMO011 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
       | game_type         | <game_type_transfer_wallet> |
@@ -29,15 +29,15 @@ Feature: Integration: Transfer Wallet Lifecycle
       | currency          | <currency>                  |
       | amount            | -35                         |
       | session_id        | <session_id>                |
-    Then the AMO011 response should be successful
+    Then the response should be successful
     And the wallet balance in "<currency>" should decrease by 35
 
     # cancel transfer
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests cancel transfer with:
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | any non-empty value         |
@@ -46,10 +46,10 @@ Feature: Integration: Transfer Wallet Lifecycle
 
     # idempotent cancel
     Given I record the current wallet balance in "<currency>"
-    When APISYS requests cancel transfer with:
+    When I call AMO014 API with:
       | field             | value                       |
       | transfer_no       | <transfer_no_2>             |
-    Then the AMO014 response should be successful
+    Then the response should be successful
     And the response should contain:
       | field             | value                       |
       | reference_id      | <amo014_reference_id>       |

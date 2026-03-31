@@ -7,7 +7,7 @@ Feature: AMO013 Notify Wager Update
     Given a merchant member exists
 
   Scenario: Notify merchant with a single wager update
-    When APISYS notifies wager update with payload:
+    When I call AMO013 API with:
       """
       {
         "notification_type": <notification_type>,
@@ -33,10 +33,10 @@ Feature: AMO013 Notify Wager Update
         ]
       }
       """
-    Then the AMO013 response should be successful
+    Then the response should be successful
 
   Scenario: Notify merchant with multiple wager updates across wallet modes
-    When APISYS notifies wager update with payload:
+    When I call AMO013 API with:
       """
       {
         "notification_type": <notification_type>,
@@ -80,10 +80,10 @@ Feature: AMO013 Notify Wager Update
         ]
       }
       """
-    Then the AMO013 response should be successful
+    Then the response should be successful
 
   Scenario: Notify merchant with nullable origin wager and settlement time
-    When APISYS notifies wager update with payload:
+    When I call AMO013 API with:
       """
       {
         "notification_type": <notification_type>,
@@ -109,4 +109,4 @@ Feature: AMO013 Notify Wager Update
         ]
       }
       """
-    Then the AMO013 response should be successful
+    Then the response should be successful

@@ -7,37 +7,37 @@ Feature: AMO001 Get Member Wallet Balance
     Given a merchant member exists
 
   Scenario: Get balances for requested currencies
-    When APISYS requests member wallet balances with:
+    When I call AMO001 API with:
       | field             | value               |
       | platform_username | <platform_username> |
       | currencies        | [<currency>]        |
-    Then the AMO001 response should be successful
+    Then the response should be successful
     And the response should contain balances for:
       | field             | value               |
       | platform_username | <platform_username> |
       | currencies        | [<currency>]        |
 
   Scenario: Get balances for all supported currencies
-    When APISYS requests member wallet balances with:
+    When I call AMO001 API with:
       | field             | value               |
       | platform_username | <platform_username> |
       | currencies        | <currencies>        |
-    Then the AMO001 response should be successful
+    Then the response should be successful
     And the response should contain balances for:
       | field             | value               |
       | platform_username | <platform_username> |
       | currencies        | <currencies>        |
       
   Scenario: Validation fails when platform username is invalid
-    When APISYS requests member wallet balances with:
+    When I call AMO001 API with:
       | field             | value                   |
       | platform_username | invalid_username        |
       | currencies        | ["CNY","THB"]           |
-    Then the AMO001 response should fail validation
+    Then the response should fail validation
 
   Scenario: Validation fails when currencies array is empty
-    When APISYS requests member wallet balances with:
+    When I call AMO001 API with:
       | field             | value                   |
       | platform_username | <platform_username>     |
       | currencies        | []                      |
-    Then the AMO001 response should fail validation
+    Then the response should fail validation
