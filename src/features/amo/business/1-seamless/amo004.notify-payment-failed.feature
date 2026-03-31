@@ -18,7 +18,7 @@ Feature: AMO004 Seamless Notify Payment Failed
       | platform_username | <platform_username> |
       | currency          | <currency>          |
       | amount            | -45                 |
-      | orders            | [{ "wager_no": "<wager_no_1>", "ticket_no": "<ticket_no>", "type": <wager_type.normal_wager>, "amount": 45, "payment_amount": 45, "effective_amount": 45, "metadata": <metadata>, "metadata_type": <metadata_type>, "wager_time": <wager_time>, "is_system_reward": <is_system_reward> }] |
+      | orders            | [{ "wager_no": "<wager_no_1>, "ticket_no": <ticket_no>, "type": <wager_type.normal_wager>, "amount": 45, "payment_amount": 45, "effective_amount": 45, "metadata": <metadata>, "metadata_type": <metadata_type>, "wager_time": <wager_time>, "is_system_reward": <is_system_reward> }] |
     Then the AMO003 response should be successful
     And the wallet balance in "<currency>" should decrease by 45
 

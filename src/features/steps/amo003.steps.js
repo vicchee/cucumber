@@ -10,6 +10,14 @@ When("APISYS requests payment with:", async function (table) {
   );
 });
 
+When("APISYS requests payment", async function () {
+  this.response = await this.request(
+    "POST",
+    this.config.merchant_settings.request_payment_api,
+    this.requestPayload,
+  );
+});
+
 Then("the AMO003 response should be successful", function () {
   if (!this.isApiSuccess()) {
     throw this.error("Expected AMO003 response to be successful");

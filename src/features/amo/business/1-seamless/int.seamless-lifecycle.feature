@@ -1,4 +1,4 @@
-Feature: Integration Flow - Seamless wager lifecycle
+Feature: Integration: Seamless Wager Lifecycle
   As APISYS
   I want to call seamless wager APIs in sequence
   So that I can verify wallet balance changes across payment, settlement, resettlement, and undo end to end

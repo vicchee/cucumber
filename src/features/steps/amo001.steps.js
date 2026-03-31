@@ -10,6 +10,14 @@ When("APISYS requests member wallet balances with:", async function (table) {
   );
 });
 
+When("APISYS requests member wallet balances", async function () {
+  this.response = await this.request(
+    "GET",
+    this.config.merchant_settings.get_payment_api,
+    this.requestPayload,
+  );
+});
+
 Then("the AMO001 response should be successful", function () {
   if (!this.isApiSuccess()) {
     throw this.error("Expected AMO001 response to be successful");

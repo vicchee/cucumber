@@ -11,6 +11,7 @@ const {
   parseJsonLike,
   isJsonLike,
   getValueByPath,
+  parseLiteral,
 } = require("./utils");
 const { CURRENCIES } = require("./constants");
 
@@ -95,16 +96,15 @@ class World {
 
       metadata_type: context.metadata_type ?? "ggl-settle-wager",
 
-      metadata:
-        context.metadata ??
-        JSON.stringify({
-          order_no: crypto.randomUUID(),
-          origin_order_no: crypto.randomUUID(),
-          origin_sub_order_no: crypto.randomUUID(),
-        }),
+      metadata: context.metadata ?? {
+        order_no: crypto.randomUUID(),
+        origin_order_no: crypto.randomUUID(),
+        origin_sub_order_no: crypto.randomUUID(),
+      },
 
       is_system_reward: context.is_system_reward ?? false,
 
+      ...createUUIDVars("ticket_no_"),
       ...createUUIDVars("transaction_no_"),
       ...createUUIDVars("transfer_no_"),
       ...createUUIDVars("partial_transaction_no_"),
@@ -121,23 +121,26 @@ class World {
         return resolved ?? value;
       }
 
-      // replace placeholders e.g. '<type.b>' -> this.vars['type']?.['b']
+      if (isJsonLike(trimmed)) {
+        const replaced = trimmed.replace(/<([^>]+)>/g, (_, path) => {
+          const resolved = getValueByPath(this.vars, path);
+
+          if (resolved === undefined) {
+            return `<${path}>`;
+          }
+
+          return JSON.stringify(resolved);
+        });
+
+        return parseJsonLike(replaced);
+      }
+
       const replaced = value.replace(/<([^>]+)>/g, (_, path) => {
         const resolved = getValueByPath(this.vars, path);
-
-        if (resolved === undefined) {
-          return `<${path}>`;
-        }
-
-        // JSON-like ("[]" / "{}"): stringify values to keep valid JSON
-        if (isJsonLike(value)) {
-          return JSON.stringify(resolved);
-        }
-
-        return resolved;
+        return resolved === undefined ? `<${path}>` : String(resolved);
       });
 
-      return parseJsonLike(replaced);
+      return parseLiteral(replaced);
     }
 
     if (Array.isArray(value)) {
@@ -174,7 +177,7 @@ class World {
       const response = await apiService.call(method, url, requestBody);
       this.lastResponse = normalizeResponse(response);
     } catch (err) {
-      this.lastResponse = normalizeError(error);
+      this.lastResponse = normalizeError(err);
     }
 
     await this.attachInfo("Request", {

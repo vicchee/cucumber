@@ -108,6 +108,22 @@ function parseJsonLike(value) {
   return value;
 }
 
+function parseLiteral(value) {
+  if (typeof value !== "string") return value;
+
+  const trimmed = value.trim();
+
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    return Number(trimmed);
+  }
+
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (trimmed === "null") return null;
+
+  return value;
+}
+
 module.exports = {
   DEFAULT_CURRENCY,
   decodeCtx,
@@ -120,4 +136,5 @@ module.exports = {
   getValueByPath,
   parseJsonLike,
   isJsonLike,
+  parseLiteral,
 };
