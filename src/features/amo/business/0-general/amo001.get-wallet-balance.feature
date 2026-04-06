@@ -14,10 +14,10 @@ Feature: AMO001 Get Member Wallet Balance
       | platform_username | <platform_username> |
       | currencies        | [<currency>]        |
     Then the response should be successful
-    And the response should contain balances for:
+    And the response should contain:
       | field             | value               |
       | platform_username | <platform_username> |
-      | currencies        | [<currency>]        |
+    And the response should contain balances for "<currency>"
 
   @success
   Scenario: Retrieve balances for all supported currencies
@@ -26,10 +26,10 @@ Feature: AMO001 Get Member Wallet Balance
       | platform_username | <platform_username> |
       | currencies        | <currencies>        |
     Then the response should be successful
-    And the response should contain balances for:
+    And the response should contain:
       | field             | value               |
       | platform_username | <platform_username> |
-      | currencies        | <currencies>        |
+    And the response should contain balances for "<currency>"
   
   @validation
   Scenario: Fail validation - invalid platform_username

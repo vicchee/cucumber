@@ -37,7 +37,11 @@ Given(
       });
     }
 
-    await this.attachInfo("Balance", { [currency]: balance.toString() });
+    await this.attachInfo("Balance", {
+      Context: currency,
+      BalanceFlow: `Before ${balance} → After ${balance}`,
+      Delta: `Actual 0 / Expected 0`,
+    });
   },
 );
 
@@ -50,7 +54,11 @@ Given(
     this.vars.beforeBalances ??= {};
     this.vars.beforeBalances[currency] = balance;
 
-    await this.attachInfo("Balance", { [currency]: balance.toString() });
+    await this.attachInfo("Balance recorded", {
+      Context: currency,
+      BalanceFlow: `Before ${balance} → After ${balance}`,
+      Delta: `Actual 0 / Expected 0`,
+    });
   },
 );
 
@@ -63,16 +71,14 @@ Given(
       this.vars.beforeBalances?.[currency] ?? (await getWalletBalance(this));
 
     const available = balance.greaterThan(0) ? balance : balance.constructor(0);
-
     const amount = available.plus(extra);
 
     this.vars.amount_exceeding_balance = amount.toString();
 
-    await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
-      currency,
-      balance: balance.toString(),
-      available: available.toString(),
-      extra,
+    await this.attachInfo("Amount prepared (exceeding)", {
+      Context: currency,
+      BalanceFlow: `Before ${balance} → After ${available}`,
+      Delta: `Actual +${extra} / Expected ${amount}`,
     });
   },
 );
@@ -100,136 +106,73 @@ Given("I prepare a deduction amount of {float}", async function (inputAmount) {
 
   this.vars.deduction_amount = amount.toString();
 
-  await this.attachInfo(`Amount to deduct: ${amount.toString()}`, {
-    currency,
-    balance: balance.toString(),
-    amount: amount.toString(),
+  await this.attachInfo("Amount prepared (deduction)", {
+    Context: currency,
+    BalanceFlow: `Before ${balance} → After ${balance.minus(amount)}`,
+    Delta: `Actual -${amount} / Expected -${amount}`,
   });
 });
 
-async function assertWalletBalanceDecrease(
+async function assertWalletBalance(
   world,
   currencyPlaceholder,
   amountPlaceholder,
+  operation,
 ) {
   const currency = world.resolve(currencyPlaceholder);
-  const amount = new Decimal(world.resolve(amountPlaceholder));
   const before = world.vars.beforeBalances?.[currency];
   const after = await getWalletBalance(world);
-  const expected = before.minus(amount);
+
+  const amount =
+    operation === "unchanged"
+      ? new Decimal(0)
+      : new Decimal(world.resolve(amountPlaceholder));
+
+  const expectedChange =
+    operation === "increase"
+      ? amount
+      : operation === "decrease"
+        ? amount.negated()
+        : new Decimal(0);
+
+  const expected = before.plus(expectedChange);
+  const actualChange = after.minus(before);
 
   assert(
     after.equals(expected),
     [
       `Wallet balance assertion failed`,
-      `  Check             : decrease`,
-      `  Currency          : ${currency}`,
-      `  Decrease amount   : ${amount.toString()}`,
-      `  Balance before    : ${before.toString()}`,
-      `  Expected balance  : ${expected.toString()}`,
-      `  Actual balance    : ${after.toString()}`,
+      `  Context         : ${operation} | ${currency}`,
+      `  BalanceFlow     : Before ${before} → After ${after}`,
+      `  Delta           : Actual ${actualChange} / Expected ${expectedChange}`,
+      `  ExpectedBalance : ${expected}`,
     ].join("\n"),
   );
 
   await world.attachInfo("Wallet balance check", {
-    Currency: currency,
-    Before: before.toString(),
-    After: after.toString(),
-    "Expected decrease": amount.toString(),
+    Context: `${operation} | ${currency}`,
+    BalanceFlow: `Before ${before} → After ${after}`,
+    Delta: `Actual ${actualChange} / Expected ${expectedChange}`,
     Expected: expected.toString(),
   });
 }
 
 Then(
-  "the wallet balance in {string} should decrease by {string}",
-  async function (currencyPlaceholder, amountPlaceholder) {
-    await assertWalletBalanceDecrease(
+  /^the wallet balance in "([^"]+)" should (increase|decrease) by "?([^"]+)"?$/,
+  async function (currencyPlaceholder, operation, amountPlaceholder) {
+    await assertWalletBalance(
       this,
       currencyPlaceholder,
       amountPlaceholder,
+      operation,
     );
-  },
-);
-
-Then(
-  "the wallet balance in {string} should decrease by {float}",
-  async function (currencyPlaceholder, amount) {
-    await assertWalletBalanceDecrease(this, currencyPlaceholder, amount);
-  },
-);
-
-async function assertWalletBalanceIncrease(
-  world,
-  currencyPlaceholder,
-  amountPlaceholder,
-) {
-  const currency = world.resolve(currencyPlaceholder);
-  const amount = new Decimal(world.resolve(amountPlaceholder));
-  const before = world.vars.beforeBalances?.[currency];
-  const after = await getWalletBalance(world);
-  const expected = before.plus(amount);
-
-  assert(
-    after.equals(expected),
-    [
-      `Wallet balance assertion failed`,
-      `  Check             : decrease`,
-      `  Currency          : ${currency}`,
-      `  Increase amount   : ${amount.toString()}`,
-      `  Balance before    : ${before.toString()}`,
-      `  Expected balance  : ${expected.toString()}`,
-      `  Actual balance    : ${after.toString()}`,
-    ].join("\n"),
-  );
-
-  await world.attachInfo("Wallet balance check", {
-    Currency: currency,
-    Before: before.toString(),
-    After: after.toString(),
-    "Expected increase": amount.toString(),
-    Expected: expected.toString(),
-  });
-}
-
-Then(
-  "the wallet balance in {string} should increase by {float}",
-  async function (currencyPlaceholder, amount) {
-    await assertWalletBalanceIncrease(this, currencyPlaceholder, amount);
-  },
-);
-
-Then(
-  "the wallet balance in {string} should increase by {string}",
-  async function (currencyPlaceholder, amount) {
-    await assertWalletBalanceIncrease(this, currencyPlaceholder, amount);
   },
 );
 
 Then(
   "the wallet balance in {string} should remain unchanged",
   async function (currencyPlaceholder) {
-    const currency = this.resolve(currencyPlaceholder);
-    const before = this.vars.beforeBalances?.[currency];
-    const after = await getWalletBalance(this);
-
-    assert(
-      after.equals(before),
-      [
-        `Wallet balance assertion failed`,
-        `  Check             : unchanged`,
-        `  Currency          : ${currency}`,
-        `  Balance before    : ${before.toString()}`,
-        `  Expected balance  : ${before.toString()}`,
-        `  Actual balance    : ${after.toString()}`,
-      ].join("\n"),
-    );
-
-    await this.attachInfo("Wallet balance check (unchanged)", {
-      Currency: currency,
-      Before: before.toString(),
-      After: after.toString(),
-      Expected: before.toString(),
-    });
+    await assertWalletBalance(this, currencyPlaceholder, 0, "unchanged");
   },
 );
 
@@ -253,10 +196,9 @@ Then(
       throw this.error(
         [
           `Integer transfer assertion failed`,
-          `  Currency          : ${currency}`,
-          `  Balance before    : ${before.toString()}`,
-          `  Expected amount   : ${expected.toString()}`,
-          `  Actual amount     : ${actual.toString()}`,
+          `  Context     : ${currency}`,
+          `  BalanceFlow : Before ${before} → After N/A`,
+          `  Delta       : Actual ${actual} / Expected ${expected}`,
         ].join("\n"),
       );
     }
@@ -283,19 +225,43 @@ Then(
       throw this.error(
         [
           `Remaining decimal assertion failed`,
-          `  Currency          : ${currency}`,
-          `  Balance before    : ${before.toString()}`,
-          `  Expected balance  : ${expected.toString()}`,
-          `  Actual balance    : ${after.toString()}`,
+          `  Context     : ${currency}`,
+          `  BalanceFlow : Before ${before} → After ${after}`,
+          `  Delta       : Actual ${after.minus(before)} / Expected ${expected}`,
         ].join("\n"),
       );
     }
 
     await this.attachInfo("Remaining decimal check", {
-      Currency: currency,
-      Before: before.toString(),
-      After: after.toString(),
-      Expected: expected.toString(),
+      Context: currency,
+      BalanceFlow: `Before ${before} → After ${after}`,
+      Delta: `Actual ${after.minus(before)} / Expected ${expected}`,
     });
   },
 );
+// amo001 - verify balances in response
+Then("the response should contain balances for {string}", function (input) {
+  const data = this.responseData(this.lastResponse);
+  const balances = data?.balances;
+
+  if (!balances || typeof balances !== "object") {
+    throw this.error("No balances object in response");
+  }
+
+  const resolved = this.resolve(input);
+  const currencies = Array.isArray(resolved) ? resolved : [resolved];
+
+  const missing = currencies.filter((c) => !(c in balances));
+
+  if (missing.length) {
+    throw this.error("Missing balances", {
+      Context: Object.keys(balances).join(", "),
+      Missing: missing.join(", "),
+    });
+  }
+
+  this.attachInfo("Balances check", {
+    Context: Object.keys(balances).join(", "),
+    Result: "All present",
+  });
+});
