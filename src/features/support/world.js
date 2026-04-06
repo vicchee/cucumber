@@ -81,11 +81,13 @@ class World {
 
       metadata_type: params.metadata_type ?? "ggl-settle-wager",
 
-      metadata: params.metadata ?? {
-        order_no: crypto.randomUUID(),
-        origin_order_no: crypto.randomUUID(),
-        origin_sub_order_no: crypto.randomUUID(),
-      },
+      metadata:
+        params.metadata ??
+        JSON.stringify({
+          order_no: crypto.randomUUID(),
+          origin_order_no: crypto.randomUUID(),
+          origin_sub_order_no: crypto.randomUUID(),
+        }), // metadata should be a JSON string
 
       is_system_reward: params.is_system_reward ?? false,
 
@@ -112,6 +114,14 @@ class World {
 
           if (resolved === undefined) {
             return `<${path}>`;
+          }
+
+          if (
+            typeof resolved === "number" ||
+            typeof resolved === "boolean" ||
+            (!isNaN(resolved) && resolved !== "")
+          ) {
+            return String(resolved);
           }
 
           return JSON.stringify(resolved);
