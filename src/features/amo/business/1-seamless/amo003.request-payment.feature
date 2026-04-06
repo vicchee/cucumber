@@ -73,7 +73,7 @@ Feature: AMO003 Request Payment
           {
             "wager_no": <wager_no_2>,
             "ticket_no": <ticket_no_2>,
-            "type": <wager_type.free_bet>,
+            "type": <wager_type.system_reward>,
             "amount": 5,
             "payment_amount": 5,
             "effective_amount": 5,
@@ -201,8 +201,9 @@ Feature: AMO003 Request Payment
     And the wallet balance in "<currency>" should decrease by 1.123456
 
   @idempotency
-  Scenario: Return same result for duplicate transaction_no
+  Scenario: Handle idempotent request payment
     Given the member has positive wallet balance in "<currency>"
+    And I record the current wallet balance in "<currency>"
     And I prepare a deduction amount of 10
     When I call AMO003 "Request Payment" API with:
       """
@@ -234,7 +235,7 @@ Feature: AMO003 Request Payment
     And the wallet balance in "<currency>" should decrease by "<deduction_amount>"
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO003 "Duplicate Request Payment" API with:
+    When I call AMO003 "Request Payment - Duplicate transaction_no" API with:
       """
       {
         "transaction_no": <transaction_no>,

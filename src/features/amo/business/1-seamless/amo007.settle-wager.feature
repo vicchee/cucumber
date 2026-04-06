@@ -6,21 +6,50 @@ Feature: AMO007 Settle Wager
 
   Background:
     Given a merchant member exists
-
-  @success
-  Scenario: Increase balance for full settlement
-    Given I record the current wallet balance in "<currency>"
-    When I call AMO007 API with:
+    # create a pending wager before each settlement scenario
+    And the member has positive wallet balance in "<currency>"
+    And I prepare a deduction amount of 100
+    When I call AMO003 "Request Payment - Create pending wager" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_1>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "parent_wager_no": <parent_wager_no>,
+        "platform_username": <platform_username>,
+        "currency": <currency>,
+        "amount": -<deduction_amount>,
+        "orders": [
+          {
+            "wager_no": <wager_no_1>,
+            "ticket_no": <ticket_no_1>,
+            "type": <wager_type.normal_wager>,
+            "amount": <deduction_amount>,
+            "payment_amount": <deduction_amount>,
+            "effective_amount": <deduction_amount>,
+            "metadata": <metadata>,
+            "metadata_type": <metadata_type>,
+            "wager_time": <wager_time>,
+            "is_system_reward": <is_system_reward>
+          }
+        ]
+      }
+      """
+    Then the response should be successful
+
+  @success
+  Scenario: Increase balance for full settlement without partial settlement history
+    Given I record the current wallet balance in "<currency>"
+    When I call AMO007 "Settle Wager - Full Settlement" API with:
+      """
+      {
+        "transaction_no": <transaction_no_2>,
+        "game_key": <game_key_seamless>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
-        "amount": 25.75,
-        "effective_amount": 25.75,
+        "amount": 150,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -32,22 +61,22 @@ Feature: AMO007 Settle Wager
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |
-    And the wallet balance in "<currency>" should increase by 25.75
+    And the wallet balance in "<currency>" should increase by 150
 
   @success
   Scenario: Increase balance for partial settlement
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 API with:
+    When I call AMO007 "Settle Wager - Partial Settlement" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_2>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
-        "amount": 99,
-        "effective_amount": 99,
+        "amount": 40,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -57,24 +86,68 @@ Feature: AMO007 Settle Wager
       """
     Then the response should be successful
     And the response should contain:
-      | field                 | value                     |
-      | reference_id          | any non-empty value       |
-    And the wallet balance in "<currency>" should increase by 99
+      | field        | value               |
+      | reference_id | any non-empty value |
+    And the wallet balance in "<currency>" should increase by 40
 
-  @success
-  Scenario: Increase balance for final settlement with partial settlement history
+  @success @business
+  Scenario: Increase balance for final settlement including only unprocessed partial settlement history
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 API with:
+    When I call AMO007 "Settle Wager - Partial Settlement 1" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <partial_transaction_no_1>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
+        "amount": 20,
+        "effective_amount": 20,
+        "settlement_time": <settlement_time>,
+        "metadata": <metadata>,
+        "metadata_type": <metadata_type>,
+        "is_system_reward": <is_system_reward>,
+        "is_partial_settlement": true
+      }
+      """
+    Then the response should be successful
+    And the wallet balance in "<currency>" should increase by 20
+
+    Given I record the current wallet balance in "<currency>"
+    When I call AMO007 "Settle Wager - Partial Settlement 2" API with:
+      """
+      {
+        "transaction_no": <partial_transaction_no_2>,
+        "game_key": <game_key_seamless>,
+        "wager_no": <wager_no_1>,
+        "platform_username": <platform_username>,
+        "type": <wager_type.normal_wager>,
+        "currency": <currency>,
+        "amount": 15,
+        "effective_amount": 15,
+        "settlement_time": <settlement_time>,
+        "metadata": <metadata>,
+        "metadata_type": <metadata_type>,
+        "is_system_reward": <is_system_reward>,
+        "is_partial_settlement": true
+      }
+      """
+    Then the response should be successful
+    And the wallet balance in "<currency>" should increase by 15
+
+    Given I record the current wallet balance in "<currency>"
+    When I call AMO007 "Settle Wager - Final Settlement With Partial History" API with:
+      """
+      {
+        "transaction_no": <transaction_no_2>,
+        "game_key": <game_key_seamless>,
+        "wager_no": <wager_no_1>,
+        "platform_username": <platform_username>,
+        "type": <wager_type.normal_wager>,
+        "currency": <currency>,
+        "amount": 80,
+        "effective_amount": 80,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -83,12 +156,17 @@ Feature: AMO007 Settle Wager
         "partial_settlement_history": [
           {
             "transaction_no": <partial_transaction_no_1>,
-            "amount": 2.5,
+            "amount": 20,
             "settlement_time": <settlement_time>
           },
           {
             "transaction_no": <partial_transaction_no_2>,
-            "amount": 1,
+            "amount": 15,
+            "settlement_time": <settlement_time>
+          },
+          {
+            "transaction_no": <partial_transaction_no_3>,
+            "amount": 5,
             "settlement_time": <settlement_time>
           }
         ]
@@ -98,22 +176,68 @@ Feature: AMO007 Settle Wager
     And the response should contain:
       | field        | value               |
       | reference_id | any non-empty value |
-    And the wallet balance in "<currency>" should increase by 13.5
+    And the wallet balance in "<currency>" should increase by 85
+
+  @business
+  Scenario: Increase balance for multiple partial settlements on the same wager_no
+    Given I record the current wallet balance in "<currency>"
+    When I call AMO007 "Settle Wager - Partial Settlement 1" API with:
+      """
+      {
+        "transaction_no": <partial_transaction_no_1>,
+        "game_key": <game_key_seamless>,
+        "wager_no": <wager_no_1>,
+        "platform_username": <platform_username>,
+        "type": <wager_type.normal_wager>,
+        "currency": <currency>,
+        "amount": 30,
+        "effective_amount": 100,
+        "settlement_time": <settlement_time>,
+        "metadata": <metadata>,
+        "metadata_type": <metadata_type>,
+        "is_system_reward": <is_system_reward>,
+        "is_partial_settlement": true
+      }
+      """
+    Then the response should be successful
+    And the wallet balance in "<currency>" should increase by 30
+
+    Given I record the current wallet balance in "<currency>"
+    When I call AMO007 "Settle Wager - Partial Settlement 2" API with:
+      """
+      {
+        "transaction_no": <partial_transaction_no_2>,
+        "game_key": <game_key_seamless>,
+        "wager_no": <wager_no_1>,
+        "platform_username": <platform_username>,
+        "type": <wager_type.normal_wager>,
+        "currency": <currency>,
+        "amount": 25,
+        "effective_amount": 100,
+        "settlement_time": <settlement_time>,
+        "metadata": <metadata>,
+        "metadata_type": <metadata_type>,
+        "is_system_reward": <is_system_reward>,
+        "is_partial_settlement": true
+      }
+      """
+    Then the response should be successful
+    And the wallet balance in "<currency>" should increase by 25
 
   @business
   Scenario: Allow zero amount without balance change
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 API with:
+    When I call AMO007 "Settle Wager - Zero Amount" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_2>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
         "amount": 0,
-        "effective_amount": 0,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -123,24 +247,24 @@ Feature: AMO007 Settle Wager
       """
     Then the response should be successful
     And the response should contain:
-      | field                  | value                    |
-      | reference_id           | any non-empty value      |
+      | field        | value               |
+      | reference_id | any non-empty value |
     And the wallet balance in "<currency>" should remain unchanged
 
   @edge
   Scenario: Support up to 6 decimal places
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 API with:
+    When I call AMO007 "Settle Wager - 6 Decimal Places" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_2>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
         "amount": 1.123456,
-        "effective_amount": 1.123456,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -155,20 +279,19 @@ Feature: AMO007 Settle Wager
     And the wallet balance in "<currency>" should increase by 1.123456
 
   @idempotency
-  Scenario: Return same result without balance change for duplicate transaction_no
-    # first settle wager
+  Scenario: Handle idempotent full settlement
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager" API with:
+    When I call AMO007 "Settle Wager - Full Settlement" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_2>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
+        "amount": 150,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -178,21 +301,20 @@ Feature: AMO007 Settle Wager
       """
     Then the response should be successful
     And I store the full response as "first_response"
-    And the wallet balance in "<currency>" should increase by 10
+    And the wallet balance in "<currency>" should increase by 150
 
-    # settle wager with duplicate transaction_no
     Given I record the current wallet balance in "<currency>"
     When I call AMO007 "Settle Wager - Duplicate transaction_no" API with:
       """
       {
-        "transaction_no": <transaction_no>,
+        "transaction_no": <transaction_no_2>,
         "game_key": <game_key_seamless>,
-        "wager_no": <wager_no_2>,
+        "wager_no": <wager_no_1>,
         "platform_username": <platform_username>,
         "type": <wager_type.normal_wager>,
         "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
+        "amount": 150,
+        "effective_amount": 100,
         "settlement_time": <settlement_time>,
         "metadata": <metadata>,
         "metadata_type": <metadata_type>,
@@ -202,167 +324,3 @@ Feature: AMO007 Settle Wager
       """
     Then the response should be the same as stored response "first_response"
     And the wallet balance in "<currency>" should remain unchanged
-
-  @idempotency
-  Scenario: Return same result without balance change for full settlement with duplicate wager_no
-    
-    # non-partial settle wager with wager_no
-    Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Full Settle Wager" API with:
-      """
-      {
-        "transaction_no": <transaction_no_1>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false
-      }
-      """
-    Then the response should be successful
-    And I store the full response as "first_response"
-    And the wallet balance in "<currency>" should increase by 10
-
-    # non-partial settle wager with duplicate wager_no
-    Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Full Settle Wager - Duplicate wager_no" API with:
-      """
-      {
-        "transaction_no": <transaction_no_2>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false
-      }
-      """
-    Then the response should be the same as stored response "first_response"
-    And the wallet balance in "<currency>" should remain unchanged
-
-
-  
-  @business
-  Scenario: Increase balance for partial settlement with duplicate wager_no
-    
-    # partial settle wager with wager_no
-    Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Partial Settle Wager" API with:
-      """
-      {
-        "transaction_no": <transaction_no_1>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false
-      }
-      """
-    Then the response should be successful
-    And the wallet balance in "<currency>" should increase by 10
-
-    # partial settle wager with duplicate wager_no
-    Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Partial Settle Wager - Duplicate wager_no" API with:
-      """
-      {
-        "transaction_no": <transaction_no_2>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false
-      }
-      """
-    Then the response should be successful
-    And the wallet balance in "<currency>" should increase by 10
-
-  @edge @business
-  Scenario: Final settlement applies full partial history even if some partial calls were missing
-    Given I record the current wallet balance in "<currency>"
-
-    When I call AMO007 API with:
-      """
-      {
-        "transaction_no": <partial_transaction_no_1>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 2.5,
-        "effective_amount": 2.5,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": true
-      }
-      """
-    Then the response should be successful
-    And the wallet balance in "<currency>" should increase by 2.5
-
-    Given I record the current wallet balance in "<currency>"
-
-    When I call AMO007 API with:
-      """
-      {
-        "transaction_no": <transaction_no>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 10,
-        "effective_amount": 10,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false,
-        "partial_settlement_history": [
-          {
-            "transaction_no": <partial_transaction_no_1>,
-            "amount": 2.5,
-            "settlement_time": <settlement_time>
-          },
-          {
-            "transaction_no": <partial_transaction_no_2>,
-            "amount": 1,
-            "settlement_time": <settlement_time>
-          }
-        ]
-      }
-      """
-    Then the response should be successful
-    And the response should contain:
-      | field        | value               |
-      | reference_id | any non-empty value |
-    And the wallet balance in "<currency>" should increase by 13.5

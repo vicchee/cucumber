@@ -1,5 +1,5 @@
 @seamless @integration 
-Feature: Seamless Wager Lifecycle
+Feature: Integration: Seamless Wager Lifecycle
   As APISYS
   I want seamless wager lifecycle APIs to apply the correct wallet adjustments
   So that request payment, settlement, resettlement, and undo produce the expected final balance
