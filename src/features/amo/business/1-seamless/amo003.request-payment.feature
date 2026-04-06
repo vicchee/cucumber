@@ -205,7 +205,7 @@ Feature: AMO003 Request Payment
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     And I prepare a deduction amount of 10
-    When I call AMO003 "Request Payment" API with:
+    When I prepare a request payload with:
       """
       {
         "transaction_no": <transaction_no>,
@@ -229,37 +229,14 @@ Feature: AMO003 Request Payment
           }
         ]
       }
-      """
+      """ 
+    And I call AMO003 "Request Payment - First request" API
     Then the response should be successful
     And I store the full response as "first_response"
     And the wallet balance in "<currency>" should decrease by "<deduction_amount>"
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO003 "Request Payment - Duplicate transaction_no" API with:
-      """
-      {
-        "transaction_no": <transaction_no>,
-        "game_key": <game_key_seamless>,
-        "parent_wager_no": <parent_wager_no>,
-        "platform_username": <platform_username>,
-        "currency": <currency>,
-        "amount": -<deduction_amount>,
-        "orders": [
-          {
-            "wager_no": <wager_no_1>,
-            "ticket_no": <ticket_no_1>,
-            "type": <wager_type.normal_wager>,
-            "amount": <deduction_amount>,
-            "payment_amount": <deduction_amount>,
-            "effective_amount": <deduction_amount>,
-            "metadata": <metadata>,
-            "metadata_type": <metadata_type>,
-            "wager_time": <wager_time>,
-            "is_system_reward": <is_system_reward>
-          }
-        ]
-      }
-      """
+    When I call AMO003 "Request Payment - Duplicate transaction_no" API
     Then the response should be the same as stored response "first_response"
     And the wallet balance in "<currency>" should remain unchanged
 

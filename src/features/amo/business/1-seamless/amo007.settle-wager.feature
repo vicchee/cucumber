@@ -39,7 +39,7 @@ Feature: AMO007 Settle Wager
   @success
   Scenario: Increase balance for full settlement without partial settlement history
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Full Settlement" API with:
+    When I call AMO007 "Settle Wager - Full settlement" API with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -66,7 +66,7 @@ Feature: AMO007 Settle Wager
   @success
   Scenario: Increase balance for partial settlement
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Partial Settlement" API with:
+    When I call AMO007 "Settle Wager - Partial settlement" API with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -93,7 +93,7 @@ Feature: AMO007 Settle Wager
   @success @business
   Scenario: Increase balance for final settlement including only unprocessed partial settlement history
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Partial Settlement 1" API with:
+    When I call AMO007 "Settle Wager - Partial settlement 1" API with:
       """
       {
         "transaction_no": <partial_transaction_no_1>,
@@ -115,7 +115,7 @@ Feature: AMO007 Settle Wager
     And the wallet balance in "<currency>" should increase by 20
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Partial Settlement 2" API with:
+    When I call AMO007 "Settle Wager - Partial settlement 2" API with:
       """
       {
         "transaction_no": <partial_transaction_no_2>,
@@ -137,7 +137,7 @@ Feature: AMO007 Settle Wager
     And the wallet balance in "<currency>" should increase by 15
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Final Settlement With Partial History" API with:
+    When I call AMO007 "Settle Wager - Final settlement with partial history" API with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -181,7 +181,7 @@ Feature: AMO007 Settle Wager
   @business
   Scenario: Increase balance for multiple partial settlements on the same wager_no
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Partial Settlement 1" API with:
+    When I call AMO007 "Settle Wager - Partial settlement 1" API with:
       """
       {
         "transaction_no": <partial_transaction_no_1>,
@@ -203,7 +203,7 @@ Feature: AMO007 Settle Wager
     And the wallet balance in "<currency>" should increase by 30
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Partial Settlement 2" API with:
+    When I call AMO007 "Settle Wager - Partial settlement 2" API with:
       """
       {
         "transaction_no": <partial_transaction_no_2>,
@@ -227,7 +227,7 @@ Feature: AMO007 Settle Wager
   @business
   Scenario: Allow zero amount without balance change
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Zero Amount" API with:
+    When I call AMO007 "Settle Wager - Zero amount - Lose" API with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -254,7 +254,7 @@ Feature: AMO007 Settle Wager
   @edge
   Scenario: Support up to 6 decimal places
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - 6 Decimal Places" API with:
+    When I call AMO007 "Settle Wager - 6 decimal places" API with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -281,7 +281,7 @@ Feature: AMO007 Settle Wager
   @idempotency
   Scenario: Handle idempotent full settlement
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Full Settlement" API with:
+    When I prepare a request payload with:
       """
       {
         "transaction_no": <transaction_no_2>,
@@ -299,28 +299,12 @@ Feature: AMO007 Settle Wager
         "is_partial_settlement": false
       }
       """
+    And I call AMO007 "Settle Wager - First request" API
     Then the response should be successful
     And I store the full response as "first_response"
     And the wallet balance in "<currency>" should increase by 150
 
     Given I record the current wallet balance in "<currency>"
-    When I call AMO007 "Settle Wager - Duplicate transaction_no" API with:
-      """
-      {
-        "transaction_no": <transaction_no_2>,
-        "game_key": <game_key_seamless>,
-        "wager_no": <wager_no_1>,
-        "platform_username": <platform_username>,
-        "type": <wager_type.normal_wager>,
-        "currency": <currency>,
-        "amount": 150,
-        "effective_amount": 100,
-        "settlement_time": <settlement_time>,
-        "metadata": <metadata>,
-        "metadata_type": <metadata_type>,
-        "is_system_reward": <is_system_reward>,
-        "is_partial_settlement": false
-      }
-      """
+    When I call AMO007 "Settle Wager - Duplicate transaction_no" API
     Then the response should be the same as stored response "first_response"
     And the wallet balance in "<currency>" should remain unchanged

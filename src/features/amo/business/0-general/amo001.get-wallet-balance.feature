@@ -29,7 +29,7 @@ Feature: AMO001 Get Member Wallet Balance
     And the response should contain:
       | field             | value               |
       | platform_username | <platform_username> |
-    And the response should contain balances for "<currency>"
+    And the response should contain balances for "<currencies>"
   
   @validation
   Scenario: Fail validation - invalid platform_username
