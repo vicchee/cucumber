@@ -49,13 +49,23 @@ class World {
       notification_type: params.notification_type ?? "typeA",
 
       parent_wager_no: parentWagerNo,
-      origin_wager_no: parentWagerNo,
 
+      // for request payment - orders array only
       wager_no: `${parentWagerNo}-1`,
+      origin_wager_no: `${parentWagerNo}-1`, // first wager in the settle / resettle flow
       wager_no_1: `${parentWagerNo}-1`,
       wager_no_2: `${parentWagerNo}-2`,
+      wager_no_3: `${parentWagerNo}-3`,
 
+      // for resettle wager - unrelated to request payment's order[i].wager_no / parent_wager_no
+      resettle_wager_no_1: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
+      resettle_wager_no_2: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
+
+      // ticket_no = 3rd party game's wager_no
       ticket_no: `ticket-${crypto.randomUUID()}`,
+      ticket_no_1: `ticket-${crypto.randomUUID()}`,
+      ticket_no_2: `ticket-${crypto.randomUUID()}`,
+      ticket_no_3: `ticket-${crypto.randomUUID()}`,
 
       wager_time: params.wager_time ?? now,
       settlement_time: params.settlement_time ?? now,
