@@ -4,11 +4,11 @@ Feature: AMO001 Get Member Wallet Balance
   I want to call the merchant wallet balance API
   So that I can retrieve the member wallet balance for one or more currencies
 
-  Background:
-    Given a merchant member exists
-
   @success
   Scenario: Retrieve balances for requested currencies
+    Process balance retrieval for requested currencies
+    Validate only requested currencies are returned
+
     When I call AMO001 API with:
       | field             | value               |
       | platform_username | <platform_username> |
@@ -17,10 +17,13 @@ Feature: AMO001 Get Member Wallet Balance
     And the response should contain:
       | field             | value               |
       | platform_username | <platform_username> |
-    And the response should contain balances for "<currency>"
-
+    And the response should contain balances for "<currency>"  
+    
   @success
   Scenario: Retrieve balances for all supported currencies
+    Process balance retrieval for all supported currencies
+    Validate each requested supported currency is returned
+
     When I call AMO001 API with:
       | field             | value               |
       | platform_username | <platform_username> |
@@ -32,31 +35,43 @@ Feature: AMO001 Get Member Wallet Balance
     And the response should contain balances for "<currencies>"
   
   @validation
-  Scenario: Fail validation - invalid platform_username
+  Scenario: Reject invalid platform_username
+    Reject request with invalid platform_username
+    Validate member lookup is required before returning balances
+
     When I call AMO001 API with:
-      | field             | value                   |
-      | platform_username | invalid_username        |
-      | currencies        | [<currency>]           |
+      | field             | value               |
+      | platform_username | invalid_username    |
+      | currencies        | [<currency>]        |
     Then the response should fail validation
 
   @validation
-  Scenario: Fail validation - empty currencies array
+  Scenario: Reject request with empty currencies array
+    Reject request with empty currencies array
+    Validate at least one currency is required
+
     When I call AMO001 API with:
-      | field             | value                   |
-      | platform_username | <platform_username>     |
-      | currencies        | []                      |
+      | field             | value               |
+      | platform_username | <platform_username> |
+      | currencies        | []                  |
     Then the response should fail validation
 
   @validation @optional
-  Scenario: Fail validation - invalid currency in array
+  Scenario: Reject request with invalid currency in array
+    Reject request with invalid currency in array
+    Validate request fails when any requested currency is unsupported
+
     When I call AMO001 API with:
-      | field             | value                   |
-      | platform_username | <platform_username>     |
+      | field             | value                  |
+      | platform_username | <platform_username>    |
       | currencies        | [<currency>,"INVALID"] |
     Then the response should fail validation
 
   @validation @optional
-  Scenario Outline: Fail validation - missing required field "<required_field>"
+  Scenario Outline: Reject request with missing required field "<required_field>"
+    Reject request with missing required field
+    Validate request is rejected when required payload is incomplete
+
     When I prepare a request payload with:
       | field             | value               |
       | platform_username | <platform_username> |

@@ -2,11 +2,12 @@
 Feature: AMO008 Cancel Wager
   As APISYS
   I want to call the merchant cancel wager API
-  So that the merchant can cancel a wager and refund the member when necessary
+  So that I can cancel a wager and restore the wallet effect when necessary
+  Update a Pending (0) or Partial Settled (12) wager to Cancelled (9) state
+  Wallet balance is refunded according to the wager state at cancellation
 
   Background:
-    Given a merchant member exists
-    And the member has positive wallet balance in "<currency>"
+    Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     And I prepare a deduction amount of 10
     When I call AMO003 "Request Payment - Create pending wager" API with:
@@ -40,9 +41,12 @@ Feature: AMO008 Cancel Wager
       | reference_id      | any non-empty value |
       | status            | 1                   |
     And the wallet balance in "<currency>" should decrease by "<deduction_amount>"
-
+    
   @success @idempotency
-  Scenario: Refund on cancel then handle idempotent cancel
+  Scenario: Cancel a wager and handle idempotent retry
+    Process wager cancellation for a pending wager
+    Validate duplicate cancel request returns the same result for the same transaction_no
+    Wallet balance is refunded only once
 
     # cancel wager to refund payment
     Given I record the current wallet balance in "<currency>"

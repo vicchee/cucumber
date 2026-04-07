@@ -2,13 +2,17 @@
 Feature: AMO003 Request Payment
   As APISYS
   I want to call the merchant request payment API
-  So that I can deduct wager payment from the member wallet correctly according to business rules
-
-  Background:
-    Given a merchant member exists
+  So that I can deduct wager payment from the member wallet
+  Create a wager in Creating (-1) state and update it to Pending (0) after payment is confirmed
+  Support one or more wager_no under the same parent_wager_no
+  Wallet balance changes by the payment amount only once per transaction_no
 
   @success
-  Scenario: Deduct balance for single wager
+  Scenario: Support request payment for a single wager
+    Process request payment for one wager
+    Validate a single wager can be created and paid under one parent_wager_no
+    Wallet balance decreases by the requested payment amount
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     And I prepare a deduction amount of 10
@@ -39,13 +43,17 @@ Feature: AMO003 Request Payment
       """
     Then the response should be successful
     And the response should contain:
-      | field             | value                |
-      | reference_id      | any non-empty value  |
-      | status            | 1                    |
+      | field        | value               |
+      | reference_id | any non-empty value |
+      | status       | 1                   |
     And the wallet balance in "<currency>" should decrease by "<deduction_amount>"
 
   @success
-  Scenario: Deduct summed amount for multiple wagers
+  Scenario: Support request payment for multiple wagers under same parent_wager_no
+    Process request payment for multiple wagers in one request
+    Validate one parent_wager_no can contain multiple wager_no entries
+    Wallet balance decreases by the summed payment amount
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     When I call AMO003 API with:
@@ -87,13 +95,17 @@ Feature: AMO003 Request Payment
       """
     Then the response should be successful
     And the response should contain:
-      | field             | value                |
-      | reference_id      | any non-empty value  |
-      | status            | 1                    |
+      | field        | value               |
+      | reference_id | any non-empty value |
+      | status       | 1                   |
     And the wallet balance in "<currency>" should decrease by 10
 
   @business
-  Scenario: Return failure for insufficient balance without balance change
+  Scenario: Return insufficient balance result without balance change
+    Process request payment that exceeds available balance
+    Validate insufficient balance returns failed payment result
+    Wallet balance remains unchanged
+
     Given I record the current wallet balance in "<currency>"
     And I prepare an amount exceeding the balance by 10
     When I call AMO003 API with:
@@ -123,14 +135,18 @@ Feature: AMO003 Request Payment
       """
     Then the response should be successful
     And the response should contain:
-      | field             | value                      |
-      | reference_id      | <transaction_no>           |
-      | status            | 2                          |
-      | fail_reason       | 3                          |
+      | field       | value            |
+      | reference_id| <transaction_no> |
+      | status      | 2                |
+      | fail_reason | 3                |
     And the wallet balance in "<currency>" should remain unchanged
 
   @business
   Scenario: Allow zero amount without balance change
+    Process request payment with zero amount
+    Validate zero amount is accepted as a valid request payment result
+    Wallet balance remains unchanged
+
     Given I record the current wallet balance in "<currency>"
     When I call AMO003 API with:
       """
@@ -159,13 +175,17 @@ Feature: AMO003 Request Payment
       """
     Then the response should be successful
     And the response should contain:
-      | field             | value                |
-      | reference_id      | any non-empty value  |
-      | status            | 1                    |
+      | field        | value               |
+      | reference_id | any non-empty value |
+      | status       | 1                   |
     And the wallet balance in "<currency>" should remain unchanged
 
   @edge
   Scenario: Support up to 6 decimal places
+    Process request payment amount with up to 6 decimal places
+    Validate decimal precision up to 6 places is supported
+    Wallet balance decreases without rounding errors
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     When I call AMO003 API with:
@@ -195,13 +215,17 @@ Feature: AMO003 Request Payment
       """
     Then the response should be successful
     And the response should contain:
-      | field             | value                |
-      | reference_id      | any non-empty value  |
-      | status            | 1                    |
+      | field        | value               |
+      | reference_id | any non-empty value |
+      | status       | 1                   |
     And the wallet balance in "<currency>" should decrease by 1.123456
 
   @idempotency
   Scenario: Handle idempotent request payment
+    Process duplicate request payment request with the same transaction_no
+    Validate same reference_id is returned
+    Wallet balance is updated only once
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     And I prepare a deduction amount of 10
@@ -229,7 +253,7 @@ Feature: AMO003 Request Payment
           }
         ]
       }
-      """ 
+      """
     And I call AMO003 "Request Payment - First request" API
     Then the response should be successful
     And I store the full response as "first_response"
@@ -241,7 +265,9 @@ Feature: AMO003 Request Payment
     And the wallet balance in "<currency>" should remain unchanged
 
   @validation
-  Scenario: Fail validation - positive amount
+  Scenario: Reject positive amount
+    Validate request payment amount must not be positive
+
     When I call AMO003 API with:
       """
       {
@@ -270,7 +296,10 @@ Feature: AMO003 Request Payment
     Then the response should fail validation
 
   @validation @optional
-  Scenario: Fail validation - amount exceeds 6 decimal places
+  Scenario: Reject amount exceeding 6 decimal places
+    Note: APISYS should send valid payload
+    Test contract: Amount exceeding 6 decimal places should fail
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     When I call AMO003 API with:
@@ -301,7 +330,11 @@ Feature: AMO003 Request Payment
     Then the response should fail validation
 
   @validation @optional
-  Scenario Outline: Fail validation - missing required field "<required_field>"
+  Scenario Outline: Reject request with missing required field "<required_field>"
+    Note: APISYS should send complete payload
+    Test contract: missing required fields should fail
+    Wallet balance remains unchanged
+
     Given the member has positive wallet balance in "<currency>"
     And I record the current wallet balance in "<currency>"
     When I prepare a request payload with:

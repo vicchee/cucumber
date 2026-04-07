@@ -61,6 +61,10 @@ class World {
       resettle_wager_no_1: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
       resettle_wager_no_2: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
 
+      // for undo wager - unrelated to request payment's order[i].wager_no / parent_wager_no
+      undo_wager_no_1: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
+      undo_wager_no_2: `${gameServiceCode}-${formatTimestamp()}-${shortUUID()}`,
+
       // ticket_no = 3rd party game's wager_no
       ticket_no: `ticket-${crypto.randomUUID()}`,
       ticket_no_1: `ticket-${crypto.randomUUID()}`,

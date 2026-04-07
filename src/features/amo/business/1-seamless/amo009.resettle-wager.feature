@@ -2,22 +2,39 @@
 Feature: AMO009 Resettle Wager
   As APISYS
   I want to call the merchant resettle wager API
-  So that I can apply corrected settlement amounts to the member wallet
+  So that I can apply corrective resettlement amounts to the member wallet
+  Only allowed for terminal state wagers (Settled (2), Cancelled (9) or Undone (11))
+  Creates a new Resettled (6) wager referencing origin_wager_no
 
   Background:
-    Given a merchant member exists
     # create a pending wager and settle it before each resettlement scenario
-    And the member has positive wallet balance in "<currency>"
+    Given the member has positive wallet balance in "<currency>"
     And I prepare a deduction amount of 100
     When I call AMO003 "Request Payment - Create pending wager" API with:
-      | field             | value                     |
-      | transaction_no    | <transaction_no_1>        |
-      | game_key          | <game_key_seamless>       |
-      | parent_wager_no   | <parent_wager_no>         |
-      | platform_username | <platform_username>       |
-      | currency          | <currency>                |
-      | amount            | -<deduction_amount>       |
-      | orders            | <orders_payload>          |
+      """
+      {
+        "transaction_no": <transaction_no_1>,
+        "game_key": <game_key_seamless>,
+        "parent_wager_no": <parent_wager_no>,
+        "platform_username": <platform_username>,
+        "currency": <currency>,
+        "amount": -<deduction_amount>,
+        "orders": [
+          {
+            "wager_no": <origin_wager_no>,
+            "ticket_no": <ticket_no_1>,
+            "type": <wager_type.normal_wager>,
+            "amount": <deduction_amount>,
+            "payment_amount": <deduction_amount>,
+            "effective_amount": <deduction_amount>,
+            "metadata": <metadata>,
+            "metadata_type": <metadata_type>,
+            "wager_time": <wager_time>,
+            "is_system_reward": <is_system_reward>
+          }
+        ]
+      }
+      """
     Then the response should be successful
 
     When I call AMO007 "Settle Wager - Full settlement - Win" API with:
@@ -38,7 +55,11 @@ Feature: AMO009 Resettle Wager
     Then the response should be successful
 
   @success @business
-  Scenario: Resettle from win to lose to win
+  Scenario: Resettle a wager from win to lose to win
+    Process resettlement for a settled wager
+    Validate multiple resettlements can reference the same origin_wager_no
+    Wallet balance changes by each resettlement amount when processed
+
     Given I record the current wallet balance in "<currency>"
     When I call AMO009 "Resettle Wager - Lose" API with:
       | field             | value                     |
@@ -89,6 +110,10 @@ Feature: AMO009 Resettle Wager
 
   @business
   Scenario: Allow zero amount without balance change
+    Process resettlement with zero amount
+    Validate zero amount is accepted as a valid correction
+    Wallet balance remains unchanged
+
     Given I record the current wallet balance in "<currency>"
     When I call AMO009 "Resettle Wager - Zero amount" API with:
       | field             | value                     |
@@ -115,6 +140,10 @@ Feature: AMO009 Resettle Wager
 
   @edge
   Scenario: Support up to 6 decimal places
+    Process resettlement amount with up to 6 decimal places
+    Validate decimal precision up to 6 places is supported
+    Wallet balance updates without rounding errors
+
     Given I record the current wallet balance in "<currency>"
     When I call AMO009 "Resettle Wager - 6 decimal places" API with:
       | field             | value                     |
@@ -141,6 +170,10 @@ Feature: AMO009 Resettle Wager
 
   @idempotency
   Scenario: Handle idempotent resettlement
+    Process duplicate resettlement request with the same transaction_no
+    Validate same reference_id is returned
+    Wallet balance is updated only once
+
     Given I record the current wallet balance in "<currency>"
     When I prepare a request payload with:
       | field             | value                     |
